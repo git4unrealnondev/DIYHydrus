@@ -9,6 +9,7 @@ import sys
 
 import python.logger as logger
 import python.database as database
+import python.qt5 as qt
 
 # Gets Called as python gets invoked.
 class CheckBoot():
@@ -19,27 +20,34 @@ class CheckBoot():
     '''
     def __init__(self):
         parser = argparse.ArgumentParser(description='Custom Databasing Program')
-        parser.add_argument('-d', "--dbDir", type=str, 
-            help='Alternative DB Location')
-        parser.add_argument('-v', "--verbose", type=str, 
-            help='Enables Verbose Logging NOT YET IMPLEMENTED')
+        parser.add_argument('-d', "--dbDir", type=str, help='Alternative DB Location')
+        parser.add_argument('-v', "--verbose", type=str, help='Enables Verbose Logging' + \
+            'NOT YET IMPLEMENTED')
         args = parser.parse_args()
 
         if args.verbose is None:
             self.verbose = False
         else:
             self.verbose = True
-        
-        self.sanity_check(args.dbDir)
-        
+
+        if args.dbDir is None:
+            db_dir = "db/"
+        else:
+            db_dir = args.dbDir
+
+        self.database = database.Database(db_dir)
+        if not self.sanity_check(db_dir):
+            self.create_database()
+
+        self.QTHANDLE = qt.qt5()
+
     def sanity_check(self, db_dir):
         '''
         Checks DB Location & Exits if is a file.
         Establishes a log file aswell.
+        Returns True if DB exists.
+        Returns False if DB does not exist.
         '''
-
-        if db_dir is None:
-            db_dir = "db/"
 
         if os.path.exists(db_dir) and os.path.isfile(db_dir):
             if self.verbose:
@@ -47,22 +55,24 @@ class CheckBoot():
             self.log_write = logger.LoggerHandler(db_dir)
             self.log_write.write("INCORRECT DB LOCATION, IS A FILE???")
             sys.exit()
-        elif os.path.exists(db_dir + "main.db"):
+            return False
+        if os.path.exists(db_dir + "main.db"):
             self.log_write = logger.LoggerHandler(db_dir)
             if self.verbose:
                 print("DB ALREADY EXISTS")
-            self.log_write.write("DB EXISTS PASSING TO MAIN.")
-            pass
+            self.log_write.write("DB EXISTS.")
+            return True
         else:
             self.log_write = logger.LoggerHandler(db_dir)
             if self.verbose:
                 print("DB DOES NOT EXIST")
             self.log_write.write("DB Does not exist Creating at Default Dir.")
-            
-            self.create_database(db_dir)
-            
-    def create_database(self, db_dir):
-        self.database = database.Database(db_dir)
+            return False
+    def create_database(self):
+        '''
+        Creates Database from structure found in python/database.py
+        Auto writes on complete
+        '''
         self.database.create_default()
 
 CheckBoot()
