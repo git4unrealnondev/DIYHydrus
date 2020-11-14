@@ -19,6 +19,7 @@ class CheckBoot():
         parser = argparse.ArgumentParser(description='Custom Databasing Program')
         parser.add_argument('-d', "--dbDir", type=str, help='Alternative DB Location')
         parser.add_argument('-u', "--url", type=str, help='url for test scraping')
+        parser.add_argument('-s', "--AddScraper", type=str, help='Adds a scraper to Database')
         parser.add_argument('-v', "--verbose", type=str, help='Enables Verbose Logging' + \
             'NOT YET IMPLEMENTED')
         args = parser.parse_args()
@@ -38,11 +39,11 @@ class CheckBoot():
         
         # Creates Scraper Handler for db Scraping
         globals.scraperHandler = globals.scraper.ScraperClass()
-
+        # Scrapes URL Using scraper Handler.
         if not args.url is None:
-            globals.scraperHandler.scrape()
+            globals.scraperHandler.scrape(args.url)
 
-        # DB Has Passed Handler Will Init GUI Now
+       # DB Has Passed Handler Will Init GUI Now
        # self.QTHANDLE = qt.qt5()
 
     def sanity_check(self, db_dir):
