@@ -32,6 +32,9 @@
        <property name="sizeConstraint">
         <enum>QLayout::SetMinAndMaxSize</enum>
        </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
        <property name="bottomMargin">
         <number>90</number>
        </property>
