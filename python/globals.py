@@ -5,3 +5,6 @@ import python.logger as logger
 import python.database as database
 import python.qt5 as qt
 import python.scraper as scraper
+import python.fileDownloaderRateLimited as rateLimiter
+
+accessCheck = "YES"

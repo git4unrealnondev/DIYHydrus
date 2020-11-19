@@ -35,16 +35,16 @@ class CheckBoot():
 
         self.sanity_check(db_dir)
 
-        # Creates Scraper Handler for db Scraping
+        # Creates Scraper Handler for Scraping
         universal.scraperHandler = universal.scraper.ScraperClass()
 
         # Overrides scraper creation if scraper option is selected
         if not args.AddScraper is None:
-            universal.scraperHandler.replace_scraper(args.AddScraper)
-        else:
-            # Scrapes URL Using scraper Handler.
-            if not args.url is None:
-                universal.scraperHandler.scrape(args.url)
+            universal.scraperHandler.replace_scraper(args.AddScraper, args.url)
+        
+        # Scrapes URL Using scraper Handler.
+        if not args.url is None:
+            universal.scraperHandler.scrape(args.url)
 
        # DB Has Passed Handler Will Init GUI Now
        # self.QTHANDLE = qt.qt5()
