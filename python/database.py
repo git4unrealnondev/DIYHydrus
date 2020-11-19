@@ -5,7 +5,7 @@ database.py Interacts With Sqlite3 Database.
 import sqlite3
 import sys
 
-import python.globals as globals
+import python.globals as universal
 
 class Database():
     '''
@@ -32,13 +32,13 @@ class Database():
 
     def db_update(self, dv, pv):
         print ("Tring to update DB (NOT IMPLEMENTED POGGERS :D)")
-        globals.log_write.write("Update test")
+        universal.log_write.write("Update test")
         print(dv,pv)
         if int(dv) == 1 and int(pv) == 2:
             # Added in Version 1.1 for parser support
             self.cursor.execute('''CREATE TABLE IF NOT EXISTS Parsers(name text, url text, parser text)''')
             print("Upgrading from ", dv, " to ", pv)
-            globals.log_write.write("Upgrading from V" + str(dv) + " to V" + str(pv))
+            universal.log_write.write("Upgrading from V" + str(dv) + " to V" + str(pv))
             
         self.cursor.execute("UPDATE Settings set num = ? WHERE name = ?", (int(self.VERSION), "VERSION"))
         self.write()
@@ -50,10 +50,10 @@ class Database():
         if int(result[2]) < self.VERSION:
             self.db_update(result[2], self.VERSION)
         elif int(result[2]) == self.VERSION:
-            globals.log_write.write("Up To Date")
+            universal.log_write.write("Up To Date")
             print("Up To Date")
         else:
-            globals.log_write.write("DB is More Advanced along then Program.")
+            universal.log_write.write("DB is More Advanced along then Program.")
             print("DB is More Advanced along then Program.")
             print("Exiting")
             sys.exit()
@@ -77,6 +77,6 @@ class Database():
         return
 
     def pull_scrapers(self):
+        ''' Returns a list of scrapers '''
         result = self.cursor.execute("SELECT * from Settings WHERE name = 'Scraper'").fetchall()
-        #print(result)
         return result
