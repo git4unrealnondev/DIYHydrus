@@ -42,44 +42,44 @@ class ScraperClass():
                     universal.log_write.write("User has decided to not create a scraper.")
                     break
     def run_scraper(self, *args):
-		'''
-		Runs Scraper from memory
-		'''
-		if len(args) >= 2:
-			scriptString = args[0]
-			URL = args[1]
+        '''
+        Runs Scraper from memory
+        '''
+        if len(args) >= 2:
+            scriptString = args[0]
+            URL = args[1]
 
-		elif len(args) == 1:
-			scriptString = args[0]
-			print("I Need the URL for the scraper to work")
-			URL = input(": ")
+        elif len(args) == 1:
+            scriptString = args[0]
+            print("I Need the URL for the scraper to work")
+            URL = input(": ")
 		
-		else:
-			print ("A Stupid Code error has happened in run_scraper.")
-			universal.log_write.write("A Stupid Code error has happened in run_scraper.")
-			universal.log_write.write("DEBUG AS FOLLOWS")
-			universal.log_write.write(args)
+        else:
+            print ("A Stupid Code error has happened in run_scraper.")
+            universal.log_write.write("A Stupid Code error has happened in run_scraper.")
+            universal.log_write.write("DEBUG AS FOLLOWS")
+            universal.log_write.write(args)
 			
-		# Initing a passthrough Variable
-		loc = {}
-		exec(scriptString, {"URL": URL, "json": globals}, loc)
-		return_data = loc['return_json']
-		print(return_data)
-	def replace_scraper(self, scraper_file):
-		'''
-		Reads Scraper into Memory
-		'''
-		scriptString = ""
+        # Initing a passthrough Variable
+        loc = {}
+        exec(scriptString, {"URL": URL, "json": globals}, loc)
+        return_data = loc['return_json']
+        print(return_data)
+    def replace_scraper(self, scraper_file):
+        '''
+        Reads Scraper into Memory
+        '''
+        scriptString = ""
 
-		#Reads script into memory
-		with open(scraper_file, "r") as infile:
-			for each in infile:
-				scriptString += each + "\n"
+        #Reads script into memory
+        with open(scraper_file, "r") as infile:
+            for each in infile:
+                scriptString += each + "\n"
 
-		#Executes Script
-		self.run_scraper(scriptString)
+        #Executes Script
+        self.run_scraper(scriptString)
 
-	'''def create_scraper(self, URL):
+    '''def create_scraper(self, URL):
 		
 		print("Enter Custom User Agent")
 		print("IE: DIYHydrus/5.0 (Windows NT x.y; rv:10.0) Gecko/20100101 DIYHydrus/10.0")

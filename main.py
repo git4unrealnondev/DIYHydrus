@@ -69,14 +69,14 @@ class CheckBoot():
             sys.exit()
 
         if os.path.exists(db_dir + "main.db"):
-            globals.log_write = universal.logger.LoggerHandler(db_dir)
+            universal.log_write = universal.logger.LoggerHandler(db_dir)
             if self.verbose:
                 print("DB ALREADY EXISTS")
             universal.log_write.write("DB EXISTS.")
             universal.databaseRef = universal.database.Database(db_dir)
             universal.databaseRef.db_sanity()
         else:
-            universal.log_write = globals.logger.LoggerHandler(db_dir)
+            universal.log_write = universal.logger.LoggerHandler(db_dir)
             if self.verbose:
                 print("DB DOES NOT EXIST")
             universal.log_write.write("DB Does not exist Creating at Default Dir.")
