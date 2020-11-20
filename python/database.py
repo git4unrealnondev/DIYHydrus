@@ -4,6 +4,7 @@ database.py Interacts With Sqlite3 Database.
 
 import sqlite3
 import sys
+import os
 
 import python.globals as universal
 
@@ -19,6 +20,10 @@ class Database():
         '''
         self.conn = sqlite3.connect(str(directory) + 'main.db')
         self.cursor = self.conn.cursor()
+        
+        #self.pull_table("Namespace")
+        
+        #print("namespaces", self.namespaces)
 
     def __del__(self):
         self.conn.close()
@@ -29,6 +34,13 @@ class Database():
         '''
 
         self.conn.commit()
+
+    def pull_table(self, table):
+        pass
+        #rows = self.cursor.execute("SELECT * FROM " + str(table)).fetchall()
+        #for each in rows:
+        #    print (each)
+        #return 
 
     def db_update(self, dv, pv):
         print ("Tring to update DB (NOT IMPLEMENTED POGGERS :D)")
@@ -58,16 +70,72 @@ class Database():
             print("DB is More Advanced along then Program.")
             print("Exiting")
             sys.exit()
+            
+        # Checking if Files Dir exists if not creates it.
+        location = self.pull_data("Settings", "name", "FilesLoc")[0][3]
+        if not os.path.exists(universal.db_dir + location):
+            universal.log_write.write("Could not find File Storage Location Creating.")
+            os.mkdir(universal.db_dir + location)
+            
+    def namespace_manager(self, key):
+        '''
+        Handles the namespace data insertion into the DB
+        ONLY ADDS NEW x IF NOT PRESENT IN NAMESPACE.
+        '''
+        #print(key, self.cursor.execute("SELECT * from Namespace WHERE name = '" + key + "'").fetchall()[0])
+        if not len(self.cursor.execute("SELECT * from Namespace WHERE name = '" + str(key) + "'").fetchall()) >= 1:
+        #if not key in self.cursor.execute("SELECT * from Namespace WHERE name = '" + key + "'").fetchall()[0]:
+            datacpy = self.cursor.execute("SELECT count() from Namespace")
+            value = datacpy.fetchone()[0] + 1
+            self.cursor.execute("INSERT INTO Namespace(id, name, description) VALUES(?, ?, ?)", (value, key, ""))
+            
+    def tag_namespace_manager(self, key, namespace):
+        '''
+        Same as namespace_manager but with slightly more advanced logic.
+        ONLY ADDS NEW x IF NOT PRESENT IN TAGS.
+        '''
+        if not len(self.cursor.execute("SELECT * from Tags WHERE name = '" + str(key) + "'").fetchall()) >= 1:
+            datacpy = self.cursor.execute("SELECT count() from Tags")
+            value = datacpy.fetchone()[0] + 1
+            
+            # TODO add proper parents support
+            
+            namespace_id = self.pull_data("Namespace", "name", namespace)[0][0]
+            #print("ID", namespace_id, namespace)
+            #print("key", key)
+            self.cursor.execute("INSERT INTO Tags(id, name,namespace) VALUES(?, ?, ?)", (value, str(key), namespace_id))
+
+    def file_manager(self, hash, filename, size, ext):
+        print(hash, filename,size,ext)
+        if not len(self.cursor.execute("SELECT * from File WHERE hash = '" + str(hash) + "'").fetchall()) >= 1:
+        #if not key in self.cursor.execute("SELECT * from Namespace WHERE name = '" + key + "'").fetchall()[0]:
+            datacpy = self.cursor.execute("SELECT count() from File")
+            value = datacpy.fetchone()[0] + 1
+            self.cursor.execute("INSERT INTO File(id, hash, filename, size, ext) VALUES(?, ?, ?, ?, ?)", (value, hash, filename, size, ext))
+
+    def t_and_f_relation_manager(self, hash, tag):
+        
+        tagid  = self.cursor.execute("SELECT * from Tags WHERE name = '" + str(tag) + "'").fetchall()
+        fileid = self.cursor.execute("SELECT * from File WHERE hash = '" + str(hash) + "'").fetchall()
+        print ("hash&tag ", hash, fileid[0][0], tag, tagid[0][0])
+        #print(tagid[0], fileid[0])
+        
+        if len(tagid) >= 1 and len(fileid) >= 1:
+            #print("BOTH ARE VALUD")
+            self.cursor.execute("INSERT INTO RelationShip(fileid, tagid) VALUES(?, ?)", (fileid[0][0], tagid[0][0]))
+        else:
+            print("t and f error", tagid, fileid)
 
     def create_default(self):
         '''
         Creates Default Database
         '''
-        self.cursor.execute('''CREATE TABLE File(hash text, size real, ext text, id text)''')
+        self.cursor.execute('''CREATE TABLE File(id INTEGER, hash text, filename text,size real, ext text)''')
         self.cursor.execute('''CREATE TABLE Tags(id INTEGER, name text, parents INTEGER, namespace INTEGER)''')
         self.cursor.execute('''CREATE TABLE RelationShip(fileid INTEGER, tagid INTEGER)''')
         self.cursor.execute('''CREATE TABLE Parents(id INTEGER, name text, children text, namespace INTEGER)''')
-        self.cursor.execute('''CREATE TABLE Namespace(id INTEGER, name text)''')
+        self.cursor.execute('''CREATE TABLE Namespace(id INTEGER, name text, description text)''')
+
         self.cursor.execute('''CREATE TABLE Settings(name text, pretty text, num INTEGER, param text)''')
 
         # Added in Version 1.1 for parser support
@@ -81,6 +149,7 @@ class Database():
         self.write()
         return
 
+    # TODO Cache returns to here in memory for further optimizations.
     def pull_data(self, table, collumn, search_term):
         return self.cursor.execute("SELECT * from " + str(table) + " WHERE " + str(collumn) + " = '" + str(search_term) + "'").fetchall()
 

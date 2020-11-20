@@ -10,14 +10,24 @@ RATE_LIMIT = 1
 def web_data_check():
 
     jsonResponse = web_data.json()
-    to_strip = ["id", "created_at", "tags", "sources", "relationships"]
-
+    to_strip = ["id", "created_at", "sources", "relationships"]
+    pull = ["tags"]
     stored_data = {}
+
+    #Data Pulled from website
+    #print(jsonResponse["posts"])
 
     for each in jsonResponse["posts"]:
         keylist = {}
+        #print(each)
         for every in to_strip:
             keylist[every] = each[every]
+        for every in pull:
+            for ec in each[every]:
+
+                if type(each[every][ec]) == list:
+                    keylist[ec] = each[every][ec]
+                
         keylist["md5"] = each["file"]["md5"]
         keylist["size"] = each["file"]["size"]
         keylist["filename"] = each["file"]["url"].split("/")[6]
@@ -26,7 +36,7 @@ def web_data_check():
     return stored_data
     
 if 'web_data' in globals():
-    print("I am getting called from fileDownloaderRateLimited")
+    #print("I am getting called from fileDownloaderRateLimited")
     stored_data = web_data_check()
 else:
     print("I am getting called from scraper.py . My variables are getting read.")

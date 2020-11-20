@@ -33,6 +33,9 @@ class CheckBoot():
         else:
             db_dir = args.dbDir
 
+        # Used by fileDownloader
+        universal.db_dir = db_dir
+
         self.sanity_check(db_dir)
 
         # Creates Scraper Handler for Scraping

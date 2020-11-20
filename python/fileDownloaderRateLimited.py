@@ -3,6 +3,7 @@ import requests
 from ratelimiter import RateLimiter
 from PIL import Image
 import hashlib
+import os
 
 import python.globals as universal
 
@@ -28,13 +29,18 @@ class InternetHandler():
         with self.rate_limiter:
             page = requests.get(self._spider[-1], headers = {'User-Agent': self.user_agent})
             parsed_data = universal.scraperHandler.run_scraper(str(universal.scraper_store[self._spider[-1].split('/')[2]]), self._spider[-1], page)
-	        
+	        # TODO Implement database intersection. Remove allready in database from to parse.
             for each in parsed_data.keys():
-                print(parsed_data[each])
+                #print(parsed_data[each])
                 self._pics[parsed_data[each]["id"]] = parsed_data[each]["pic"]
                 self._filename[parsed_data[each]["id"]] = parsed_data[each]["filename"]
             #print("Pics", self._pics)
-            self.download_pic()
+            return self.download_pic(), parsed_data
+            
+            
+            
+            
+            
 
     def hash256(self, image_ref):
         file_hash = hashlib.sha256()
@@ -42,11 +48,32 @@ class InternetHandler():
              file_hash.update(data)
         #file_hash.update(image_ref)
         print(file_hash.hexdigest())
+        return file_hash.hexdigest()
+        
+    def check_dir(self, hash_input):
+        hone = ''
+        htwo = ''
+        hone = str(hash_input)[0] + str(hash_input)[1] + '/'
+        htwo = str(hash_input)[2] + str(hash_input)[3] + '/'
+
+        databaseloc = universal.databaseRef.pull_data("Settings", "name", "FilesLoc")[0][3]
+
+
+        if not os.path.isdir(universal.db_dir + databaseloc + hone):
+            os.mkdir(universal.db_dir + databaseloc + hone)
+        if not os.path.isdir(universal.db_dir + databaseloc + hone + htwo):
+            os.mkdir(universal.db_dir + databaseloc + hone + htwo)
+        #print(hone, htwo)
+        
+        return universal.db_dir + databaseloc + hone + htwo
 
     def download_pic(self):
-    
+        
+        formattedData = {}
+        
         # NEEDS TO BE IN THIS ORDER FOR RATE LIMITING TO WORK PROPERLY
         for each in self._pics.keys():
+            individualData = []
             with self.rate_limiter:
             
                 file_hash = hashlib.sha256()
@@ -57,10 +84,17 @@ class InternetHandler():
 
                 
                     #r.raise_for_status()
-                    self.hash256(r)
+                    image_hash = self.hash256(r)
                     r.raw.decode_content = False
                     
-                    with open(self._filename[each], 'wb') as fileTemp:
+                    filepath = self.check_dir(image_hash)
+                    
+                    with open(filepath + self._filename[each], 'wb') as fileTemp:
                         for chunk in r.iter_content(chunk_size=8192):
                             fileTemp.write(chunk)
-                
+
+                individualData.append(self._filename[each])
+                individualData.append(image_hash)
+            
+            formattedData[each] = individualData
+        return formattedData
