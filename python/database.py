@@ -114,7 +114,7 @@ class Database():
             self.cursor.execute("INSERT INTO File(id, hash, filename, size, ext) VALUES(?, ?, ?, ?, ?)", (value, hash, filename, size, ext))
 
     def t_and_f_relation_manager(self, hash, tag):
-        
+        # TODO ADD error checking for overlapping already seen files.
         tagid  = self.cursor.execute("SELECT * from Tags WHERE name = '" + str(tag) + "'").fetchall()
         fileid = self.cursor.execute("SELECT * from File WHERE hash = '" + str(hash) + "'").fetchall()
         print ("hash&tag ", hash, fileid[0][0], tag, tagid[0][0])
