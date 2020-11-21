@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 
 class ScraperClass():
 
+    scraper_rate_limited = None
+
     def __init__(self):
         """
         Loads and Initlizes the scrapers into Memory.
@@ -21,6 +23,14 @@ class ScraperClass():
         universal.scraper_list = {}
         universal.scraper_store = {}
 
+    def __del__(self):
+        if not self.scraper_rate_limited is None:
+            downloadedFiles, parsed_data = self.scraper_rate_limited.removal()
+            # Interprets and prepares data for database.
+            self.interpret_data(parsed_data, downloadedFiles)
+            #for each in universal.scraper_store:
+            #    each.removal()
+
     def scrape(self, URL):
         ''' Checks to see if scraper exists and if it doesn't it will prompt the user to create one. '''
         if URL.split('/')[2] in universal.scraper_list.keys():
@@ -29,10 +39,10 @@ class ScraperClass():
             universal.log_write.write("Found Scraper " + URL.split('/')[2] + " ScrapersDB")
             
             # Pulling ratelimited INSTANCE TO BE USED
-            scraper_rate_limited = universal.scraper_list[URL.split('/')[2]]
+            self.scraper_rate_limited = universal.scraper_list[URL.split('/')[2]]
             
             # TODO Potential INSERTION point for files already in DB
-            downloadedFiles, parsed_data = scraper_rate_limited.request_data()
+            downloadedFiles, parsed_data = self.scraper_rate_limited.request_data()
             
             # downloadedFiles contains filename & sha256 hash
             for each in downloadedFiles:
@@ -68,10 +78,12 @@ class ScraperClass():
 
     def interpret_data(self, data, file_data):
     
+
+    
         for each in data.keys():
 
             universal.databaseRef.file_manager(file_data[each][1], file_data[each][0], None, file_data[each][0].split('.')[1])
-        
+
             for every in data[each]:
             
                 universal.databaseRef.namespace_manager(every)
@@ -79,34 +91,42 @@ class ScraperClass():
                 if type(data[each][every]) is list:
                     for ec in data[each][every]:
                         #print("List", ec)
-                        universal.databaseRef.tag_namespace_manager(ec, every)
                         #print('1')
+                        universal.databaseRef.tag_namespace_manager(ec, every)
+                        
                         universal.databaseRef.t_and_f_relation_manager(file_data[each][1], ec)
-                        pass
+
+                        
                 if type(data[each][every]) is dict:
                     for ec in data[each][every].keys():
-                        universal.databaseRef.tag_namespace_manager(ec, every)
                         #print('2')
+                        universal.databaseRef.tag_namespace_manager(ec, every)
+                        
                         universal.databaseRef.t_and_f_relation_manager(file_data[each][1], ec)
+
                         #print("Dict", ec, data[each][every][ec])
                 if type(data[each][every]) is str:
                     #print(data[each][every])
                     #print("every", every, data[each][every])
+                    #print('3')
                     universal.databaseRef.tag_namespace_manager(data[each][every], every)
-                    print('3')
+                    
                     universal.databaseRef.t_and_f_relation_manager(file_data[each][1], data[each][every])
-                    pass
+
+                    
                 if type(data[each][every]) is int:
+                    
                     #print("every", every, data[each][every])
                     universal.databaseRef.tag_namespace_manager(data[each][every], every)
-                    print('4')
-                    print(every, data[each][every])
+                    #print('4')
+                    #print(every, data[each][every])
                     universal.databaseRef.t_and_f_relation_manager(file_data[each][1], data[each][every])
-                    pass
-                    
+                
+
                 #print(every ,data[each][every])
                 
         universal.databaseRef.write()
+        
     def scraper_list_handler(self, scraper_name, pulled_data, URL):
         '''
         Handles scraper objects for rate limiting.

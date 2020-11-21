@@ -19,6 +19,28 @@ class InternetHandler():
 	    
         self.rate_limiter = RateLimiter(max_calls=self.rate_limit, period=5, callback=self.limit)
 
+    def removal(self):
+        '''
+        Trims list to hand to scraper for database adding upon untimely close.
+        
+        '''
+        #for each in self.formattedData:
+        #print("Parsed_DATA", self.parsed_data)
+    
+        #print("len", len(self.formattedData), len(self.parsed_data))
+    
+        data = self.parsed_data
+        temp = {}
+        
+        #print(self.formattedData)
+        
+        #print(self.parsed_data)
+
+        for each in self.formattedData.keys():
+            temp[each] = data[each]
+        #print(len(data), len(data) - len(self.formattedData), type(data))
+        #print(len(temp))
+        return self.formattedData, temp
 	    
     def limit(until, *args):
         print("Rate Limited for ", until, *args)
@@ -28,14 +50,14 @@ class InternetHandler():
         #print("file", universal.scraper_store)
         with self.rate_limiter:
             page = requests.get(self._spider[-1], headers = {'User-Agent': self.user_agent})
-            parsed_data = universal.scraperHandler.run_scraper(str(universal.scraper_store[self._spider[-1].split('/')[2]]), self._spider[-1], page)
+            self.parsed_data = universal.scraperHandler.run_scraper(str(universal.scraper_store[self._spider[-1].split('/')[2]]), self._spider[-1], page)
 	        # TODO Implement database intersection. Remove allready in database from to parse.
-            for each in parsed_data.keys():
+            for each in self.parsed_data.keys():
                 #print(parsed_data[each])
-                self._pics[parsed_data[each]["id"]] = parsed_data[each]["pic"]
-                self._filename[parsed_data[each]["id"]] = parsed_data[each]["filename"]
+                self._pics[self.parsed_data[each]["id"]] = self.parsed_data[each]["pic"]
+                self._filename[self.parsed_data[each]["id"]] = self.parsed_data[each]["filename"]
             #print("Pics", self._pics)
-            return self.download_pic(), parsed_data
+            return self.download_pic(), self.parsed_data
             
             
             
@@ -69,8 +91,8 @@ class InternetHandler():
 
     def download_pic(self):
         
-        formattedData = {}
-        
+        self.formattedData = {}
+
         # NEEDS TO BE IN THIS ORDER FOR RATE LIMITING TO WORK PROPERLY
         for each in self._pics.keys():
             individualData = []
@@ -92,9 +114,11 @@ class InternetHandler():
                     with open(filepath + self._filename[each], 'wb') as fileTemp:
                         for chunk in r.iter_content(chunk_size=8192):
                             fileTemp.write(chunk)
+    
+
 
                 individualData.append(self._filename[each])
                 individualData.append(image_hash)
             
-            formattedData[each] = individualData
-        return formattedData
+            self.formattedData[each] = individualData
+        return self.formattedData

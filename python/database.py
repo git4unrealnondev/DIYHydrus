@@ -6,6 +6,8 @@ import sqlite3
 import sys
 import os
 
+import urllib.parse
+
 import python.globals as universal
 
 class Database():
@@ -83,18 +85,19 @@ class Database():
         ONLY ADDS NEW x IF NOT PRESENT IN NAMESPACE.
         '''
         #print(key, self.cursor.execute("SELECT * from Namespace WHERE name = '" + key + "'").fetchall()[0])
-        if not len(self.cursor.execute("SELECT * from Namespace WHERE name = '" + str(key) + "'").fetchall()) >= 1:
+        if not len(self.cursor.execute("SELECT * from Namespace WHERE name = '" + str(urllib.parse.quote(str(key))) + "'").fetchall()) >= 1:
         #if not key in self.cursor.execute("SELECT * from Namespace WHERE name = '" + key + "'").fetchall()[0]:
             datacpy = self.cursor.execute("SELECT count() from Namespace")
             value = datacpy.fetchone()[0] + 1
-            self.cursor.execute("INSERT INTO Namespace(id, name, description) VALUES(?, ?, ?)", (value, key, ""))
+            self.cursor.execute("INSERT INTO Namespace(id, name, description) VALUES(?, ?, ?)", (value, str(urllib.parse.quote(str(key))), ""))
             
     def tag_namespace_manager(self, key, namespace):
         '''
         Same as namespace_manager but with slightly more advanced logic.
         ONLY ADDS NEW x IF NOT PRESENT IN TAGS.
         '''
-        if not len(self.cursor.execute("SELECT * from Tags WHERE name = '" + str(key) + "'").fetchall()) >= 1:
+       # print(key)
+        if not len(self.cursor.execute("SELECT * from Tags WHERE name = '" + str(urllib.parse.quote(str(key))) + "'").fetchall()) >= 1:
             datacpy = self.cursor.execute("SELECT count() from Tags")
             value = datacpy.fetchone()[0] + 1
             
@@ -103,10 +106,10 @@ class Database():
             namespace_id = self.pull_data("Namespace", "name", namespace)[0][0]
             #print("ID", namespace_id, namespace)
             #print("key", key)
-            self.cursor.execute("INSERT INTO Tags(id, name,namespace) VALUES(?, ?, ?)", (value, str(key), namespace_id))
+            self.cursor.execute("INSERT INTO Tags(id, name,namespace) VALUES(?, ?, ?)", (value, str(urllib.parse.quote(str(key))), namespace_id))
 
     def file_manager(self, hash, filename, size, ext):
-        print(hash, filename,size,ext)
+        #print(hash, filename,size,ext)
         if not len(self.cursor.execute("SELECT * from File WHERE hash = '" + str(hash) + "'").fetchall()) >= 1:
         #if not key in self.cursor.execute("SELECT * from Namespace WHERE name = '" + key + "'").fetchall()[0]:
             datacpy = self.cursor.execute("SELECT count() from File")
@@ -115,9 +118,9 @@ class Database():
 
     def t_and_f_relation_manager(self, hash, tag):
         # TODO ADD error checking for overlapping already seen files.
-        tagid  = self.cursor.execute("SELECT * from Tags WHERE name = '" + str(tag) + "'").fetchall()
+        tagid  = self.cursor.execute("SELECT * from Tags WHERE name = '" + str(str(urllib.parse.quote(str(tag)))) + "'").fetchall()
         fileid = self.cursor.execute("SELECT * from File WHERE hash = '" + str(hash) + "'").fetchall()
-        print ("hash&tag ", hash, fileid[0][0], tag, tagid[0][0])
+        #print ("hash&tag ", hash, fileid[0][0], tag, tagid[0][0])
         #print(tagid[0], fileid[0])
         
         if len(tagid) >= 1 and len(fileid) >= 1:
@@ -126,6 +129,13 @@ class Database():
         else:
             print("t and f error", tagid, fileid)
 
+    def search_tags(self, tags):
+        tagids  = self.cursor.execute("SELECT * from Tags WHERE name = '" + str(str(urllib.parse.quote(str(tags)))) + "'").fetchall()
+        return tagids
+        
+    def search_relationships(self, tagid):
+        return self.cursor.execute("SELECT * from RelationShip WHERE tagid = '" + str(tagid)  + "'").fetchall()
+        
     def create_default(self):
         '''
         Creates Default Database
