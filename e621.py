@@ -8,7 +8,6 @@ RATE_LIMIT = 3
 
 #Custom scripts to parse data
 def web_data_check():
-
     jsonResponse = web_data.json()
     to_strip = ["id", "created_at", "sources", "relationships"]
     pull = ["tags"]
@@ -27,12 +26,13 @@ def web_data_check():
 
                 if type(each[every][ec]) == list:
                     keylist[ec] = each[every][ec]
-                
-        keylist["md5"] = each["file"]["md5"]
-        keylist["size"] = each["file"]["size"]
-        keylist["filename"] = each["file"]["url"].split("/")[6]
-        keylist["pic"] = each["file"]["url"]
-        stored_data[keylist["id"]] = keylist
+        if not each["file"]["url"] is None:
+            keylist["md5"] = each["file"]["md5"]
+            keylist["size"] = each["file"]["size"]
+        #print(each["file"]["url"], each['file'])
+            keylist["filename"] = each["file"]["url"].split("/")[6]
+            keylist["pic"] = each["file"]["url"]
+            stored_data[keylist["id"]] = keylist
     return stored_data
     
 if 'web_data' in globals():

@@ -26,6 +26,9 @@ class ScraperClass():
     def __del__(self):
         if not self.scraper_rate_limited is None:
             downloadedFiles, parsed_data = self.scraper_rate_limited.removal()
+            
+            if downloadedFiles is None and parsed_data is None:
+                return
             # Interprets and prepares data for database.
             self.interpret_data(parsed_data, downloadedFiles)
             #for each in universal.scraper_store:
@@ -214,7 +217,11 @@ class ScraperClass():
                 scriptString += each + "\n"
 
         #Places Script into scraper_store
-        universal.scraper_store[args[0].split('/')[2]] = scriptString
+        if not scriptString is None:
+            try:
+                universal.scraper_store[args[0].split('/')[2]] = scriptString
+            except AttributeError:
+                print("I see that you have not specified URL's")
 
         #Executes Script
         self.run_scraper(scriptString, args[0])

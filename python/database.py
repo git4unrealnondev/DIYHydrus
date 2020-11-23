@@ -15,6 +15,8 @@ class Database():
     Interaction Handler between database and everything else
     '''
     VERSION = 1
+    
+    hashestoignore = []
 
     def __init__(self, directory):
         '''
@@ -115,26 +117,33 @@ class Database():
             datacpy = self.cursor.execute("SELECT count() from File")
             value = datacpy.fetchone()[0] + 1
             self.cursor.execute("INSERT INTO File(id, hash, filename, size, ext) VALUES(?, ?, ?, ?, ?)", (value, hash, filename, size, ext))
+        else:
+            #print("File Manager ignoring hash: ", hash)
+            self.hashestoignore.append(hash)
+            #universal.log_write.write("File Manager ignoring hash: " + str(hash))
 
     def t_and_f_relation_manager(self, hash, tag):
-        # TODO ADD error checking for overlapping already seen files.
         tagid  = self.cursor.execute("SELECT * from Tags WHERE name = '" + str(str(urllib.parse.quote(str(tag)))) + "'").fetchall()
         fileid = self.cursor.execute("SELECT * from File WHERE hash = '" + str(hash) + "'").fetchall()
         #print ("hash&tag ", hash, fileid[0][0], tag, tagid[0][0])
+        #print(fileid, tagid)
         #print(tagid[0], fileid[0])
         
-        if len(tagid) >= 1 and len(fileid) >= 1:
-            #print("BOTH ARE VALUD")
-            self.cursor.execute("INSERT INTO RelationShip(fileid, tagid) VALUES(?, ?)", (fileid[0][0], tagid[0][0]))
+        if len(tagid) == 1 and len(fileid) == 1:
+            if not hash in self.hashestoignore:
+                self.cursor.execute("INSERT INTO RelationShip(fileid, tagid) VALUES(?, ?)", (fileid[0][0], tagid[0][0]))
+            
         else:
             print("t and f error", tagid, fileid)
 
     def search_tags(self, tags):
-        tagids  = self.cursor.execute("SELECT * from Tags WHERE name = '" + str(str(urllib.parse.quote(str(tags)))) + "'").fetchall()
-        return tagids
-        
+        return self.pull_data("Tags", "name", str(str(urllib.parse.quote(str(tags)))))
+
     def search_relationships(self, tagid):
-        return self.cursor.execute("SELECT * from RelationShip WHERE tagid = '" + str(tagid)  + "'").fetchall()
+        return self.pull_data("RelationShip", "tagid", tagid)
+        
+    def pull_file(self, fileid):
+        return self.pull_data("File", "id", fileid)
         
     def create_default(self):
         '''

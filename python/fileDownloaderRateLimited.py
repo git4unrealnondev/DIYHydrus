@@ -6,7 +6,7 @@ import hashlib
 import os
 
 import python.globals as universal
-
+import urllib
 
 class InternetHandler():
     _pics = {}
@@ -18,6 +18,8 @@ class InternetHandler():
         self._spider.append(URL)
 	    
         self.rate_limiter = RateLimiter(max_calls=self.rate_limit, period=5, callback=self.limit)
+
+        self.formattedData = None
 
     def removal(self):
         '''
@@ -36,6 +38,9 @@ class InternetHandler():
         
         #print(self.parsed_data)
 
+        if self.formattedData is None:
+            return None, None
+
         for each in self.formattedData.keys():
             temp[each] = data[each]
         #print(len(data), len(data) - len(self.formattedData), type(data))
@@ -46,23 +51,35 @@ class InternetHandler():
         print("Rate Limited for ", until, *args)
 	    
     def request_data(self):
-        #universal.scraper_store[self.URL.split('/')[2]]
-        #print("file", universal.scraper_store)
+        '''
+        Pulls data from website and gets a list of pictures to download.
+        '''
         with self.rate_limiter:
             page = requests.get(self._spider[-1], headers = {'User-Agent': self.user_agent})
             self.parsed_data = universal.scraperHandler.run_scraper(str(universal.scraper_store[self._spider[-1].split('/')[2]]), self._spider[-1], page)
-	        # TODO Implement database intersection. Remove allready in database from to parse.
+
+            # Function cleans files based on picture source already being inside the DB.
+            self.cleaned_data = self.parsed_data.copy()
             for each in self.parsed_data.keys():
-                #print(parsed_data[each])
-                self._pics[self.parsed_data[each]["id"]] = self.parsed_data[each]["pic"]
-                self._filename[self.parsed_data[each]["id"]] = self.parsed_data[each]["filename"]
-            #print("Pics", self._pics)
-            return self.download_pic(), self.parsed_data
-            
-            
-            
-            
-            
+                url_list = universal.databaseRef.pull_data("Tags", "name", str(str(urllib.parse.quote(str(self.parsed_data[each]["pic"])))))
+                if not url_list == []:
+                    del self.cleaned_data[each]
+                    print("Not adding", url_list[0][1], "to list to download already in DB.")
+                    universal.log_write.write("Not adding" + str(url_list[0][1]) + "to list to download already in DB.")
+                    
+                else:
+                
+                    print("Will download:", str(self.parsed_data[each]["pic"]), '!')
+                    universal.log_write.write("Adding file: " + str(self.parsed_data[each]["pic"]) + " to DB.")
+                    
+            # Using Cleaned keys from DB
+            for each in self.cleaned_data.keys():
+                self._pics[self.cleaned_data[each]["id"]] = self.cleaned_data[each]["pic"]
+                self._filename[self.cleaned_data[each]["id"]] = self.cleaned_data[each]["filename"]
+
+            # Returns Cleaned data(urls, tags and whatever the parser wants)
+            # Returns A list of files downloaded from downloader
+            return self.download_pic(), self.cleaned_data
 
     def hash256(self, image_ref):
         file_hash = hashlib.sha256()
@@ -92,6 +109,8 @@ class InternetHandler():
     def download_pic(self):
         
         self.formattedData = {}
+        
+        # TODO NEED to make a way to stop this from downloading to prevent an ugly error message.
 
         # NEEDS TO BE IN THIS ORDER FOR RATE LIMITING TO WORK PROPERLY
         for each in self._pics.keys():
@@ -115,7 +134,7 @@ class InternetHandler():
                         for chunk in r.iter_content(chunk_size=8192):
                             fileTemp.write(chunk)
     
-
+                    universal.log_write.write("Downloaded file: " + str(filepath) + " !")
 
                 individualData.append(self._filename[each])
                 individualData.append(image_hash)
