@@ -39,10 +39,10 @@ class CheckBoot():
 
         self.sanity_check(db_dir)
 
-        universal.pluginManager = universal.plugin.PluginHandler()
+        universal.pluginManager = universal.plugin.PluginHandler(universal)
 
         # Creates Scraper Handler for Scraping
-        universal.scraperHandler = universal.scraper.ScraperClass()
+        universal.scraperHandler = universal.scraper.ScraperClass(universal)
 
         # Overrides scraper creation if scraper option is selected
         if not args.AddScraper is None:
@@ -85,14 +85,14 @@ class CheckBoot():
             if self.verbose:
                 print("DB ALREADY EXISTS")
             universal.log_write.write("DB EXISTS.")
-            universal.databaseRef = universal.database.Database(db_dir)
+            universal.databaseRef = universal.database.Database(db_dir, universal)
             universal.databaseRef.db_sanity()
         else:
             universal.log_write = universal.logger.LoggerHandler(db_dir)
             if self.verbose:
                 print("DB DOES NOT EXIST")
             universal.log_write.write("DB Does not exist Creating at Default Dir.")
-            universal.databaseRef = universal.database.Database(db_dir)
+            universal.databaseRef = universal.database.Database(db_dir, universal)
             universal.databaseRef.create_default()
             universal.databaseRef.db_sanity()
 

@@ -8,8 +8,6 @@ import os
 
 import urllib.parse
 
-import python.global_vars as universal
-
 class Database():
     '''
     Interaction Handler between database and everything else
@@ -18,16 +16,15 @@ class Database():
 
     hashestoignore = []
 
-    def __init__(self, directory):
+    def __init__(self, directory, universal):
         '''
         Creates Connector and Cursor for Database Interaction
         '''
         self.conn = sqlite3.connect(str(directory) + 'main.db')
         self.cursor = self.conn.cursor()
 
-        #self.pull_table("Namespace")
-
-        #print("namespaces", self.namespaces)
+        #creating universe handler
+        self.universal = universal
 
     def __del__(self):
         self.conn.close()
@@ -55,7 +52,7 @@ class Database():
         IE: What needs to be done to update a database to a new version
         '''
         print("Tring to update DB (NOT IMPLEMENTED POGGERS :D)")
-        universal.log_write.write("Update test")
+        self.universal.log_write.write("Update test")
         print(database_version, program_version)
         # Example DB Update Script
         #if int(dv) == 1 and int(pv) == 2:
@@ -76,19 +73,19 @@ class Database():
         if int(result[2]) < self.VERSION:
             self.db_update(result[2], self.VERSION)
         elif int(result[2]) == self.VERSION:
-            universal.log_write.write("Up To Date")
+            self.universal.log_write.write("Up To Date")
             print("Up To Date")
         else:
-            universal.log_write.write("DB is More Advanced along then Program.")
+            self.universal.log_write.write("DB is More Advanced along then Program.")
             print("DB is More Advanced along then Program.")
             print("Exiting")
             sys.exit()
 
         # Checking if Files Dir exists if not creates it.
         location = self.pull_data("Settings", "name", "FilesLoc")[0][3]
-        if not os.path.exists(universal.db_dir + location):
-            universal.log_write.write("Could not find File Storage Location Creating.")
-            os.mkdir(universal.db_dir + location)
+        if not os.path.exists(self.universal.db_dir + location):
+            self.universal.log_write.write("Could not find File Storage Location Creating.")
+            os.mkdir(self.universal.db_dir + location)
 
     def namespace_manager(self, key):
         '''
@@ -142,7 +139,7 @@ class Database():
         else:
             #print("File Manager ignoring hash: ", hash)
             self.hashestoignore.append(hashes)
-            #universal.log_write.write("File Manager ignoring hash: " + str(hash))
+            #self.universal.log_write.write("File Manager ignoring hash: " + str(hash))
 
     def t_and_f_relation_manager(self, hashes, tag):
         '''

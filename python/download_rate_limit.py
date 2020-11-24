@@ -8,7 +8,7 @@ import requests
 
 from ratelimiter import RateLimiter
 
-import python.global_vars as universal
+#import python.global_vars as universal
 
 
 class InternetHandler():
@@ -21,12 +21,14 @@ class InternetHandler():
     parsed_data = None
     cleaned_data = None
     formatted_data = None
-    def __init__(self, user_agent, rate_limit, URL):
+    def __init__(self, user_agent, rate_limit, URL, universal):
         self.user_agent = user_agent
         self.rate_limit = rate_limit
         self._spider.append(URL)
 
         self.rate_limiter = RateLimiter(max_calls=self.rate_limit, period=5, callback=self.limit)
+
+        self.universal = universal
 
     def removal(self):
         '''
@@ -66,24 +68,24 @@ class InternetHandler():
         '''
         with self.rate_limiter:
             page = requests.get(self._spider[-1], headers={'User-Agent': self.user_agent})
-            self.parsed_data = universal.scraperHandler.run_scraper(str(universal.scraper_store \
+            self.parsed_data = self.universal.scraperHandler.run_scraper(str(self.universal.scraper_store \
                                 [self._spider[-1].split('/')[2]]), self._spider[-1], page)
 
             # Function cleans files based on picture source already being inside the DB.
             self.cleaned_data = self.parsed_data.copy()
             for each in self.parsed_data.keys():
-                url_list = universal.databaseRef.pull_data("Tags", "name", \
+                url_list = self.universal.databaseRef.pull_data("Tags", "name", \
                             str(str(urllib.parse.quote(str(self.parsed_data[each]["pic"])))))
                 if not url_list == []:
                     del self.cleaned_data[each]
                     print("Not adding", url_list[0][1], "to list to download already in DB.")
-                    universal.log_write.write("Not adding" + str(url_list[0][1]) + \
+                    self.universal.log_write.write("Not adding" + str(url_list[0][1]) + \
                                               "to list to download already in DB.")
 
                 else:
 
                     print("Will download:", str(self.parsed_data[each]["pic"]), '!')
-                    universal.log_write.write("Adding file: " + \
+                    self.universal.log_write.write("Adding file: " + \
                                               str(self.parsed_data[each]["pic"]) + " to DB.")
 
             # Using Cleaned keys from DB
@@ -107,8 +109,8 @@ class InternetHandler():
         print(file_hash.hexdigest())
         return file_hash.hexdigest()
 
-    @staticmethod
-    def check_dir(hash_input):
+    
+    def check_dir(self, hash_input):
         '''
         Creates file storage location if not exist.
         @return the file download location
@@ -118,15 +120,15 @@ class InternetHandler():
         hone = str(hash_input)[0] + str(hash_input)[1] + '/'
         htwo = str(hash_input)[2] + str(hash_input)[3] + '/'
 
-        databaseloc = universal.databaseRef.pull_data("Settings", "name", "FilesLoc")[0][3]
+        databaseloc = self.universal.databaseRef.pull_data("Settings", "name", "FilesLoc")[0][3]
 
-        if not os.path.isdir(universal.db_dir + databaseloc + hone):
-            os.mkdir(universal.db_dir + databaseloc + hone)
-        if not os.path.isdir(universal.db_dir + databaseloc + hone + htwo):
-            os.mkdir(universal.db_dir + databaseloc + hone + htwo)
+        if not os.path.isdir(self.universal.db_dir + databaseloc + hone):
+            os.mkdir(self.universal.db_dir + databaseloc + hone)
+        if not os.path.isdir(self.universal.db_dir + databaseloc + hone + htwo):
+            os.mkdir(self.universal.db_dir + databaseloc + hone + htwo)
         #print(hone, htwo)
 
-        return universal.db_dir + databaseloc + hone + htwo
+        return self.universal.db_dir + databaseloc + hone + htwo
 
     def download_pic(self):
         '''
@@ -158,7 +160,10 @@ class InternetHandler():
                         for chunk in request_data.iter_content(chunk_size=8192):
                             file_temp.write(chunk)
 
-                    universal.log_write.write("Downloaded file: " + str(filepath) + " !")
+                    self.universal.log_write.write("Downloaded file: " + str(filepath) + " !")
+
+                #Callback for plugin system
+                self.universal.pluginManager.callback("file_download", filepath, self._filename[each], image_hash)
 
                 individual_data.append(self._filename[each])
                 individual_data.append(image_hash)
