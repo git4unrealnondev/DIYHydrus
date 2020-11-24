@@ -1,5 +1,3 @@
-import urllib.parse
-st = 2345
-
-sa = urllib.parse.quote(str(st))
-print (sa)
+'''
+A tempory file for me to check stuffs.
+'''

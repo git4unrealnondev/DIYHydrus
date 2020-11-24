@@ -5,7 +5,7 @@ Main.py Initial sanity checker and bootup
 import os
 import argparse
 import sys
-import python.globals as universal
+import python.global_vars as universal
 
 # Gets Called as python gets invoked.
 class CheckBoot():
@@ -39,26 +39,27 @@ class CheckBoot():
 
         self.sanity_check(db_dir)
 
+        universal.pluginManager = universal.plugin.PluginHandler()
+
         # Creates Scraper Handler for Scraping
         universal.scraperHandler = universal.scraper.ScraperClass()
 
         # Overrides scraper creation if scraper option is selected
         if not args.AddScraper is None:
             universal.scraperHandler.replace_scraper(args.AddScraper, args.url)
-        
+
         # Scrapes URL Using scraper Handler.
         if not args.url is None:
             universal.scraperHandler.scrape(args.url)
-            
+
         if not args.Search is None:
             universal.commons.search_handler(args.Search)
 
-       # DB Has Passed Handler Will Init GUI Now
-       # self.QTHANDLE = qt.qt5()
-
     def __del__(self):
-        del universal.scraperHandler
-        del universal.databaseRef
+        if not universal.scraperHandler is None:
+            del universal.scraperHandler
+        if not universal.databaseRef is None:
+            del universal.databaseRef
 
     def sanity_check(self, db_dir):
         '''
@@ -76,7 +77,7 @@ class CheckBoot():
             if self.verbose:
                 print("ERROR DB IS FILE?")
             universal.log_write = universal.logger.LoggerHandler(db_dir)
-            self.log_write.write("INCORRECT DB LOCATION, IS A FILE???")
+            universal.log_write.write("INCORRECT DB LOCATION, IS A FILE???")
             sys.exit()
 
         if os.path.exists(db_dir + "main.db"):
@@ -100,6 +101,6 @@ class CheckBoot():
         Creates Database from structure found in python/database.py
         Auto writes on complete
         '''
-        self.database.create_default()
+        universal.databaseRef.create_default()
 
 CheckBoot()
