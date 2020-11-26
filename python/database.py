@@ -143,7 +143,7 @@ class Database():
         #print ("hash&tag ", hash, fileid[0][0], tag, tagid[0][0])
         #print(fileid, tagid)
         #print(tagid[0], fileid[0])
-
+        #print(tagid, fileid)
         if len(tagid) == 1 and len(fileid) == 1:
             if not hashes in self.hashestoignore:
                 self.cursor.execute("INSERT INTO RelationShip(fileid, tagid) " + \
@@ -161,6 +161,8 @@ class Database():
         else:
             return int(self.cursor.execute("SELECT Count(*) from " + str(table)).fetchone()[0])
                                   
+    def delete_data(self, table, column, search_term):
+        self.cursor.execute("DELETE FROM " + str(table) + " WHERE " + str(column) + " = " + str(search_term))
 
     def search_tags(self, tags):
         '''

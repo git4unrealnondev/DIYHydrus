@@ -10,3 +10,6 @@
 **Plugins
 **/plugins
 plugins
+test/
+**/test
+**test
