@@ -152,6 +152,9 @@ class Database():
         else:
             print("t and f error", tagid, fileid)
 
+    def add_setting(self, name, pretty, num, param):
+        self.cursor.execute("INSERT INTO Settings VALUES(?, ?, ?, ?)", (name, pretty, num, param))
+
     def return_count(self, table, collumn, *args):
         '''
         Returns the count of a given collumn with or without search terms

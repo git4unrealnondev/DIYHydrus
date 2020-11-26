@@ -64,19 +64,39 @@ class PluginHandler():
                 self.universal.log_write.write("Plugin: " + str(each) + \
                     " is not a valid plugin and has been removed from loading.")
         print("PLUGINSTOLOAD: ", self.pluginstoload)
+        
+        #Checks if plugins are in DB run list.
+        #for each in self.pluginstoload:
+        plugin_check_list = self.universal.databaseRef.pull_data("Settings", "name", "PluginLoadsCheck")
+
+        plugin_check_list_cleaned = []
+        # Parses the already approved settings.
+        for each in plugin_check_list:
+            plugin_check_list_cleaned.append(each[3])
+
+        plugins_not_approved = set(self.pluginstoload) - set(plugin_check_list_cleaned)
+        
+        for each in plugins_not_approved:
+            print("PLUGIN: ", each, "Has not been approved yet! Approve (y or n)")
+            user_input = ""
+            while(True):
+                user_input = input(": ")
+                if user_input.upper() == "Y" or user_input.upper() == "N":
+                    break
+            if user_input.upper() == "N":
+                self.pluginstoload.pop(self.pluginstoload.index(each))
+            else:
+                self.universal.databaseRef.add_setting("PluginLoadsCheck", None, None, str(each))
+
         if len(self.pluginstoload) == 0:
             return
         self.universal.log_write.write("Loading Plugins: " + str(self.pluginstoload))
         for each in self.pluginstoload:
             self.init_plugin(self.load_file("plugins/" + each + "/main.py"), each)
         for each in self.pluginstore:
-            print("each", each)
             intersection = self.pluginstore[each][1].keys() & self.callback_list.keys()
-            
-            print("Intersection", intersection)
             for every in intersection:
                 self.callback_list[every].append(self.pluginstore[each][1][every])
-            print(self.callback_list)
             #for every in self.pluginstore[each]:
             #    print(every)
     def init_plugin(self, script_string, script_name):
