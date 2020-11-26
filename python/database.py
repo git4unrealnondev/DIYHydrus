@@ -27,6 +27,7 @@ class Database():
         self.universal = universal
 
     def __del__(self):
+        self.write()
         self.conn.close()
 
     def write(self):
@@ -35,16 +36,6 @@ class Database():
         '''
 
         self.conn.commit()
-
-    def pull_table(self, table):
-        '''
-        Designed to pull_table data.
-        DEPRICATED
-        '''
-        #rows = self.cursor.execute("SELECT * FROM " + str(table)).fetchall()
-        #for each in rows:
-        #    print (each)
-        #return
 
     def db_update(self, database_version, program_version):
         '''
@@ -161,6 +152,16 @@ class Database():
         else:
             print("t and f error", tagid, fileid)
 
+    def return_count(self, table, collumn, *args):
+        '''
+        Returns the count of a given collumn with or without search terms
+        '''
+        if len(args) > 0:
+            return self.cursor.execute("SELECT Count( " + str(collumn) + ") from " + str(table) + " WHERE " + str(collumn) + " = '" + str(args[0]) + "'").fetchone()[0]
+        else:
+            return int(self.cursor.execute("SELECT Count(*) from " + str(table)).fetchone()[0])
+                                  
+
     def search_tags(self, tags):
         '''
         Returns the tag ids that matches the tags.
@@ -172,6 +173,18 @@ class Database():
         Returns the relationship between a tagid and the fileid
         '''
         return self.pull_data("RelationShip", "tagid", tagid)
+
+    def direct_sqlite_return(self, data):
+        '''
+        Allows direct access to sqlite3 database. Is dangerous. but IDK
+        '''
+        return self.cursor.execute(data)
+
+    def direct_sqlite(self, data):
+        '''
+        Allows direct access to sqlite3 database. Is dangerous. but IDK
+        '''
+        self.cursor.execute(data)
 
     def pull_file(self, fileid):
         '''
@@ -236,6 +249,15 @@ class Database():
                             "VALUES(?, ?, ?, ?)", \
                             ("DEFAULTUSERAGENT", None, None, default_agent))
         self.write()
+    #TO DO Cache returns to here in memory for further optimizations.
+    def invert_pull_data(self, table, collumn, search_term):
+        '''
+        Handler to return data that gets pulled from the database
+        '''
+        return self.cursor.execute("SELECT * from " + str(table)
+                                   + " WHERE " + str(collumn)
+                                   + " != '" + str(search_term)
+                                   + "'").fetchall()
 
     #TO DO Cache returns to here in memory for further optimizations.
     def pull_data(self, table, collumn, search_term):

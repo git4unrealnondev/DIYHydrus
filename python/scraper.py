@@ -110,7 +110,7 @@ class ScraperClass():
                         file_data[each][1], data[each][every])
 
                 #print(every ,data[each][every])
-
+            self.universal.pluginManager.callback("database_writing", data[each], file_data[each][1], file_data[each][0])
         self.universal.databaseRef.write()
 
     

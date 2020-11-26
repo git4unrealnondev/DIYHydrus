@@ -15,7 +15,7 @@ class PluginHandler():
     callbacks = {}
     
     callback_list = {"file_download" : [], 
-                    "":[], 
+                    "database_writing":[], 
                     "":[],
                     "":[],
                     "":[]}
