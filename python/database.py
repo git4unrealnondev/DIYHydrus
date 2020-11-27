@@ -20,7 +20,7 @@ class Database():
         '''
         Creates Connector and Cursor for Database Interaction
         '''
-        self.conn = sqlite3.connect(str(directory) + 'main.db')
+        self.conn = sqlite3.connect(str(directory) + 'main.db', check_same_thread=False)
         self.cursor = self.conn.cursor()
 
         #creating universe handler
@@ -77,6 +77,19 @@ class Database():
         if not os.path.exists(self.universal.db_dir + location):
             self.universal.log_write.write("Could not find File Storage Location Creating.")
             os.mkdir(self.universal.db_dir + location)
+
+    def create_table(self, table_name, db_format):
+        '''
+        Creates a database table if it does not exist.
+        '''
+        format_string = "("
+        for each in db_format:
+            print(each)
+            format_string += each + " " + db_format[each] + " , "
+        format_string = format_string[:-2]
+        format_string += ")"
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS " + str(table_name) + " " + str(format_string))
+        self.write()
 
     def namespace_manager(self, key):
         '''
@@ -167,6 +180,12 @@ class Database():
     def delete_data(self, table, column, search_term):
         self.cursor.execute("DELETE FROM " + str(table) + " WHERE " + str(column) + " = " + str(search_term))
 
+    def search_tagid(self, tag_id):
+        '''
+        Returns the tag ids that matches the tags.
+        '''
+        return self.pull_data("Tags", "id", str(tag_id))
+
     def search_tags(self, tags):
         '''
         Returns the tag ids that matches the tags.
@@ -178,6 +197,12 @@ class Database():
         Returns the relationship between a tagid and the fileid
         '''
         return self.pull_data("RelationShip", "tagid", tagid)
+        
+    def search_relationships_file(self, file_id):
+        '''
+        Returns the relationship between a fileid and the tagid.
+        '''
+        return self.pull_data("RelationShip", "fileid", file_id)
 
     def direct_sqlite_return(self, data):
         '''
@@ -254,6 +279,33 @@ class Database():
                             "VALUES(?, ?, ?, ?)", \
                             ("DEFAULTUSERAGENT", None, None, default_agent))
         self.write()
+    
+    def optimized_file_tag_pull(self, file_id):
+        tag_data = self.search_relationships_file(file_id)
+        
+        _list = ""
+        for each in tag_data:
+            if not tag_data[-1] == each:
+                _list += "id = " + str(each[1]) + " OR "
+            else:
+                _list += "id = " + str(each[1])
+        
+        #print(_list)
+        tags = self.cursor.execute("SELECT name FROM Tags where " + _list).fetchall()
+        _list = []
+        for each in tags:
+            _list.append(each[0])
+        return _list
+        print(tags)
+    def pull_all_tags_file(self, file_id):
+        '''
+        Pulls all tags associated with a file id.
+        '''
+        tag_data = self.search_relationships_file(file_id)
+        _list = []
+        for each in tag_data:
+            _list.append(self.search_tagid(each[1])[0][1])
+        return _list
     #TO DO Cache returns to here in memory for further optimizations.
     def invert_pull_data(self, table, collumn, search_term):
         '''

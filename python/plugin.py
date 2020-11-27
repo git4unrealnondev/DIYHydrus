@@ -61,6 +61,8 @@ class PluginHandler():
         for each in self.pluginstoload:
             if not os.path.exists("plugins/" + each + "/main.py"):
                 self.pluginstoload.pop(self.pluginstoload.index(each))
+                print("Plugin: " + str(each) + \
+                    " is not a valid plugin and has been removed from loading.")
                 self.universal.log_write.write("Plugin: " + str(each) + \
                     " is not a valid plugin and has been removed from loading.")
         print("PLUGINSTOLOAD: ", self.pluginstoload)
