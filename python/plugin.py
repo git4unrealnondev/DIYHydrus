@@ -28,6 +28,14 @@ class PluginHandler():
 
         self.load_into_memory()
 
+    def __del__(self):
+        for each in self.pluginstore:
+            try:
+                self.pluginstore[each][0].delete()
+            except Exception:
+                print("Plugin", self.pluginstore[each],  "Does not have a delete")
+            del self.pluginstore[each][0]
+        return
     def callback(self, callback_name, *args):
         for each in self.callback_list[callback_name]:
             each(*args)

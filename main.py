@@ -56,8 +56,12 @@ class CheckBoot():
             universal.commons.search_handler(args.Search)
 
     def __del__(self):
+
         if not universal.scraperHandler is None:
             del universal.scraperHandler
+
+        del universal.pluginManager
+            
         if not universal.databaseRef is None:
             del universal.databaseRef
 

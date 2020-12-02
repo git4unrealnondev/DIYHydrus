@@ -21,10 +21,14 @@ class InternetHandler():
     parsed_data = None
     cleaned_data = None
     formatted_data = None
-    def __init__(self, user_agent, rate_limit, URL, universal):
+    _bypass_requests = False
+    def __init__(self, user_agent, rate_limit, URL, universal, *args):
         self.user_agent = user_agent
         self.rate_limit = rate_limit
         self._spider.append(URL)
+        
+        if len(args) > 0:
+            self._bypass_requests = args[0]
 
         self.rate_limiter = RateLimiter(max_calls=self.rate_limit, period=5, callback=self.limit)
 
@@ -67,34 +71,72 @@ class InternetHandler():
         Pulls data from website and gets a list of pictures to download.
         '''
         with self.rate_limiter:
-            page = requests.get(self._spider[-1], headers={'User-Agent': self.user_agent})
-            self.parsed_data = self.universal.scraperHandler.run_scraper(str(self.universal.scraper_store \
-                                [self._spider[-1].split('/')[2]]), self._spider[-1], page)
+            #This handles if the scraper needs to control the connections.
+            #IE: Cloudflare websites and / or custom scraping needs.
+            # Instead of pulled web data it passes a list with the URL and a rate limiter object.
+            if not self._bypass_requests:
+                page = requests.get(self._spider[-1], headers={'User-Agent': self.user_agent})
+                self.parsed_data = self.universal.scraperHandler.run_scraper(str(self.universal.scraper_store \
+                                    [self._spider[-1].split('/')[2]]), self._spider[-1], page)
+
+            else:
+
+                self.parsed_data = self.universal.scraperHandler.run_scraper(str(self.universal.scraper_store \
+                                    [self._spider[-1].split('/')[2]]), self._spider[-1], [self._spider[-1], self.rate_limiter])
 
             # Function cleans files based on picture source already being inside the DB.
-            self.cleaned_data = self.parsed_data.copy()
+            try:
+                self.cleaned_data = self.parsed_data.copy()
+            except AttributeError:
+                print("ERROR PARSER:", str( \
+                                    self._spider[-1].split('/')[2]), "DID NOT RETURN ANY DATA TO BE PARSED.")
+                self.universal.log_write.write("ERROR PARSER:" + str( \
+                                    self._spider[-1].split('/')[2]) + " DID NOT RETURN ANY DATA TO BE PARSED.")
+                raise AttributeError("Stopping program")
+                
+            tag_to_download = {}
+                
             for each in self.parsed_data.keys():
+                #print(self.parsed_data[each]["pic"])
                 url_list = self.universal.databaseRef.pull_data("Tags", "name", \
                             str(str(urllib.parse.quote(str(self.parsed_data[each]["pic"])))))
-                if not url_list == []:
-                    del self.cleaned_data[each]
-                    print("Not adding", url_list[0][1], "to list to download already in DB.")
-                    self.universal.log_write.write("Not adding" + str(url_list[0][1]) + \
+                #print(url_list)
+                del_cleaned_data = False
+                if not len(url_list) == 0:
+                    if not url_list[0][1] == []:
+                        del_cleaned_data = True
+                        if not len(url_list) == 0:
+                           print("Not adding", url_list[0][1], "to list to download already in DB.")
+                           self.universal.log_write.write("Not adding" + str(url_list[0][1]) + \
                                               "to list to download already in DB.")
+                        else:
+                           print("adding error")
+                    else:
 
-                else:
-
-                    print("Will download:", str(self.parsed_data[each]["pic"]), '!')
-                    self.universal.log_write.write("Adding file: " + \
+                        print("Will download:", str(self.parsed_data[each]["pic"]), '!')
+                        self.universal.log_write.write("Adding file: " + \
                                               str(self.parsed_data[each]["pic"]) + " to DB.")
+                
+                    if url_list[0][1] == urllib.parse.quote(str(self.parsed_data[each]["pic"])):
+                        print("File is already in DB updating info. Not yeet implemented.")
+                        tag_to_download[each] = self.cleaned_data[each]
+                
+                    if del_cleaned_data:
+                        #print("del_data", self.cleaned_data[each], each)
+                        
+                        del self.cleaned_data[each]
+                    #print(self.cleaned_data)
+                    #print("tags", self.cleaned_data)
 
             # Using Cleaned keys from DB
             for each in self.cleaned_data.keys():
                 self._pics[self.cleaned_data[each]["id"]] = self.cleaned_data[each]["pic"]
                 self._filename[self.cleaned_data[each]["id"]] = self.cleaned_data[each]["filename"]
-
-            # Returns Cleaned data(urls, tags and whatever the parser wants)
-            # Returns A list of files downloaded from downloader
+    
+                #print("pics", self._pics)
+    
+                # Returns Cleaned data(urls, tags and whatever the parser wants)
+             # Returns A list of files downloaded from downloader
             return self.download_pic(), self.cleaned_data
 
     @staticmethod
@@ -129,6 +171,9 @@ class InternetHandler():
         #print(hone, htwo)
 
         return self.universal.db_dir + databaseloc + hone + htwo
+
+    def download_tags(self):
+        print("tags")
 
     def download_pic(self):
         '''

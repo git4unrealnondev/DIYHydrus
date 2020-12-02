@@ -2,6 +2,7 @@
 Handler For Loading and Deploying Scrapers
 """
 import python.global_vars as universal
+import os
 
 class ScraperClass():
     '''
@@ -16,9 +17,7 @@ class ScraperClass():
 
         self.universal = universal
 
-        #for each in universal.databaseRef.pull_scrapers():
-        #    print(each)
-        #    self.scraper_list_handler(each)
+        self.scraper_folder_managment()
 
         # Adding a scraper list for rate limiting
         universal.scraper_list = {}
@@ -35,6 +34,19 @@ class ScraperClass():
             #for each in self.universal.scraper_store:
             #    each.removal()
 
+    def scraper_folder_managment(self):
+        '''
+        manages the loading and scraping of webpages.
+        '''
+        SCRAPER_DIR = "scrapers/"
+        if not os.path.exists(SCRAPER_DIR):
+            os.mkdir(SCRAPER_DIR)
+        
+        temp_list = []
+        #for files in os.listdir(SCRAPER_DIR):
+        #    self.replace_scraper(SCRAPER_DIR + files)
+
+        
     def scrape(self, url):
         '''
         Checks to see if scraper exists and if it doesn't it will prompt the user to create one.
@@ -47,18 +59,8 @@ class ScraperClass():
             # Pulling ratelimited INSTANCE TO BE USED
             self.scraper_rate_limited = self.universal.scraper_list[url.split('/')[2]]
 
-            # DONE Potential INSERTION point for files already in DB
             # SCRAPER handles the DB calls, sorts things out.
             downloaded_files, parsed_data = self.scraper_rate_limited.request_data()
-
-            # downloadedFiles contains filename & sha256 hash
-            #for each in downloadedFiles:
-            #    print(each)
-
-            #for each in parsed_data.keys():
-            #    print(parsed_data[each])
-
-            # Interprets and prepares data for database.
             self.interpret_data(parsed_data, downloaded_files)
 
     def interpret_data(self, data, file_data):
@@ -68,8 +70,18 @@ class ScraperClass():
         '''
         for each in data.keys():
 
-            self.universal.databaseRef.file_manager(\
-                file_data[each][1], file_data[each][0], None, file_data[each][0].split('.')[1])
+            #print("data", each, file_data)
+
+            if each in file_data.keys():
+                
+                self.universal.databaseRef.file_manager(\
+                    file_data[each][1], file_data[each][0], None, file_data[each][0].split('.')[1])
+            
+            else:
+                print(data[each], each)
+                print("super", self.universal.databaseRef.pull_data("File", "id", each))
+                #file_data[each][1] = self.universal.databaseRef.pull_data("File", "id", each)[0][1]
+            
 
             for every in data[each]:
 
@@ -77,8 +89,6 @@ class ScraperClass():
 
                 if isinstance(data[each][every], list):
                     for tag in data[each][every]:
-                        #print("List", ec)
-                        #print('1')
                         self.universal.databaseRef.tag_namespace_manager(tag, every)
 
                         self.universal.databaseRef.t_and_f_relation_manager(file_data[each][1], tag)
@@ -139,13 +149,16 @@ class ScraperClass():
                 "Settings",
                 "name",
                 "DEFAULTRATELIMIT")[0][2]
-        print("Parsed Data", "USERAGENT:", user_agent, "RATELIMIT:", rate_limit)
+        #print("Parsed Data", "USERAGENT:", user_agent, "RATELIMIT:", rate_limit)
 
         if not scraper_name in self.universal.scraper_list:
-
+            if "SELF_HANDLE_CONNECTION" in pulled_data.keys():
+                self.universal.scraper_list[scraper_name] = self.universal.rateLimiter.InternetHandler(
+                    user_agent, rate_limit, url, self.universal, True)
+            else:
             # Scraper is not in list need to create a new one and append to scraper list.
-            self.universal.scraper_list[scraper_name] = self.universal.rateLimiter.InternetHandler(
-                user_agent, rate_limit, url, self.universal)
+                self.universal.scraper_list[scraper_name] = self.universal.rateLimiter.InternetHandler(
+                    user_agent, rate_limit, url, self.universal)
         return self.universal.scraper_list[scraper_name]
 
     def run_scraper(self, *args):
@@ -189,6 +202,7 @@ class ScraperClass():
             self.scraper_list_handler(url.split('/')[2], loc, url)
             return None
         return None
+
     def replace_scraper(self, scraper_file, *args):
         '''
         Reads Scraper into Memory
@@ -201,11 +215,15 @@ class ScraperClass():
                 script_string += each + "\n"
 
         #Places Script into scraper_store
-        if not script_string is None:
+        if not script_string is None and len(args) > 0:
             try:
                 self.universal.scraper_store[args[0].split('/')[2]] = script_string
             except AttributeError:
                 print("I see that you have not specified URL's")
 
+        elif len(args) == 0:
+            print("I am not running scraper " + scraper_file + " .")
+            self.universal.log_write.write("I am not running scraper " + scraper_file + " .")
+            return
         #Executes Script
         self.run_scraper(script_string, args[0])
