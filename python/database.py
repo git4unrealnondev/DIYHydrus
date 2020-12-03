@@ -23,7 +23,7 @@ class Database():
         #self.conn = sqlite3.connect(str(directory) + 'main.db', check_same_thread=False)
         self.conn = sqlite3.connect(str(directory) + 'main.db')
         self.cursor = self.conn.cursor()
-
+        self.cursor.execute("VACUUM")
         #creating universe handler
         self.universal = universal
 

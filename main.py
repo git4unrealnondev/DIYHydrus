@@ -22,6 +22,7 @@ class CheckBoot():
         parser.add_argument('-s', "--Search", type=str, help='Searches DB use quotes when spacing')
         parser.add_argument('-v', "--verbose", type=str, help='Enables Verbose Logging' + \
             'NOT YET IMPLEMENTED')
+        parser.add_argument('-ps', action="store_true",help='Searches query with parser')
         args = parser.parse_args()
 
         if args.verbose is None:
@@ -45,11 +46,11 @@ class CheckBoot():
         universal.scraperHandler = universal.scraper.ScraperClass(universal)
 
         # Overrides scraper creation if scraper option is selected
-        if not args.AddScraper is None:
+        if not args.AddScraper is None and not args.ps:
             universal.scraperHandler.replace_scraper(args.AddScraper, args.url)
 
         # Scrapes URL Using scraper Handler.
-        if not args.url is None:
+        if not args.url is None and not args.ps:
             universal.scraperHandler.scrape(args.url)
 
         if not args.Search is None:
@@ -60,7 +61,8 @@ class CheckBoot():
         if not universal.scraperHandler is None:
             del universal.scraperHandler
 
-        del universal.pluginManager
+        if not universal.pluginManager is None:
+            del universal.pluginManager
             
         if not universal.databaseRef is None:
             del universal.databaseRef

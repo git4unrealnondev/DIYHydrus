@@ -12,3 +12,4 @@ accessCheck = "YES"
 
 scraperHandler = None
 databaseRef = None
+pluginManager = None

@@ -4,7 +4,7 @@ By Default scrips have access to universal.
 '''
 # Parameters to be passed into fileDownloaderRateLimited.py when instantiated
 USER_AGENT = "DIYHydrus/5.0 (Windows NT x.y; rv:10.0) Gecko/20100101 DIYHydrus/10.0"
-RATE_LIMIT = 3
+RATE_LIMIT = 5
 
 #Custom scripts to parse data
 def web_data_check():

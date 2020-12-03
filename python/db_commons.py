@@ -6,6 +6,6 @@ def search_handler(tags):
     for each in result:
         pulled_fileids = []
         pulled_relations = universal.databaseRef.search_relationships(each[0])
-        #print("I Pulled", len(pulled_relations), " Relations From DB")
+        print("I Pulled", len(pulled_relations), " Relations From DB")
         #for ec in pulled_relations:
         #    print(universal.databaseRef.pull_file(ec[0]))

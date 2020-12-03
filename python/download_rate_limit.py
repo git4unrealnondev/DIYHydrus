@@ -30,7 +30,7 @@ class InternetHandler():
         if len(args) > 0:
             self._bypass_requests = args[0]
 
-        self.rate_limiter = RateLimiter(max_calls=self.rate_limit, period=5, callback=self.limit)
+        self.rate_limiter = RateLimiter(max_calls=self.rate_limit, period=10, callback=self.limit)
 
         self.universal = universal
 
