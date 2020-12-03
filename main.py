@@ -77,7 +77,7 @@ class CheckBoot():
 
         if not os.path.exists(db_dir):
             print("DB DIR does not exist :C ", db_dir)
-            sys.exit()
+            os.mkdir(db_dir)
 
         if os.path.exists(db_dir) and os.path.isfile(db_dir):
             if self.verbose:
