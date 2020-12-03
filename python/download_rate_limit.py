@@ -18,21 +18,28 @@ class InternetHandler():
     _pics = {}
     _spider = []
     _filename = {}
+    filename = None
+    search_term = None
+    _init_url = None
     parsed_data = None
     cleaned_data = None
     formatted_data = None
     _bypass_requests = False
-    def __init__(self, user_agent, rate_limit, URL, universal, *args):
+    def __init__(self, user_agent, rate_limit, URL, universal, filename, *args):
         self.user_agent = user_agent
         self.rate_limit = rate_limit
         self._spider.append(URL)
-        
+        self._init_url = URL
+        self.filename = filename
         if len(args) > 0:
             self._bypass_requests = args[0]
 
         self.rate_limiter = RateLimiter(max_calls=self.rate_limit, period=10, callback=self.limit)
 
         self.universal = universal
+
+    def return_url(self):
+        return _init_url
 
     def removal(self):
         '''
@@ -74,18 +81,17 @@ class InternetHandler():
             #This handles if the scraper needs to control the connections.
             #IE: Cloudflare websites and / or custom scraping needs.
             # Instead of pulled web data it passes a list with the URL and a rate limiter object.
-            if not self._bypass_requests:
-                page = requests.get(self._spider[-1], headers={'User-Agent': self.user_agent})
-                self.parsed_data = self.universal.scraperHandler.run_scraper(str(self.universal.scraper_store \
-                                    [self._spider[-1].split('/')[2]]), self._spider[-1], page)
-
-            else:
-
-                self.parsed_data = self.universal.scraperHandler.run_scraper(str(self.universal.scraper_store \
-                                    [self._spider[-1].split('/')[2]]), self._spider[-1], [self._spider[-1], self.rate_limiter])
+            #if not self._bypass_requests:
+            #    page = requests.get(self._spider[-1], headers={'User-Agent': self.user_agent})
+            #    self.parsed_data = self.universal.scraperHandler.run_scraper(str(self.universal.scraper_store \
+            #                        [self._spider[-1].split('/')[2]]), self._spider[-1], page)
+#
+#            else:
+            self.parsed_data = self.universal.scraperHandler.run_scraper(self.filename, self.universal.scraper_store[self.filename], [self._spider[-1], self.rate_limiter, self])
 
             # Function cleans files based on picture source already being inside the DB.
             try:
+                print("parsed", type(self.parsed_data))
                 self.cleaned_data = self.parsed_data.copy()
             except AttributeError:
                 print("ERROR PARSER:", str( \
@@ -172,6 +178,10 @@ class InternetHandler():
 
         return self.universal.db_dir + databaseloc + hone + htwo
 
+    def normal_requests(self, url):
+        with self.rate_limiter:
+            page = requests.get(url, headers={'User-Agent': self.user_agent})
+            return page
     def download_tags(self):
         print("tags")
 

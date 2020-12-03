@@ -11,15 +11,30 @@ def web_data_check():
     '''
     Parses data from website
     '''
-    json_response = web_data.json()
+
+    init_url = web_data[0]
+    rate_limiter = web_data[1]
+    parent = web_data[2]
+
+    if init_url is None:
+        front = "https://e621.net/posts.json?tags="
+        back = ''
+        parent_url = parent.search_term.replace(" ", "+")
+        init_url =  front + str(parent_url) + back
+
+    #print(init_url)
+    json_response = parent.normal_requests(init_url).json()
     to_strip = ["id", "created_at", "sources", "relationships"]
     pull = ["tags"]
     stored_data_temp = {}
 
     #Data Pulled from website
-    #print(jsonResponse["posts"])
+    print("json",json_response)
 
-    if "posts" in json_response:
+    if json_response is None:
+        print("isnone")
+
+    elif "posts" in json_response:
 
         for each in json_response["posts"]:
             keylist = {}
@@ -48,6 +63,7 @@ def web_data_check():
                     keylist["children"] = each["relationships"]["children"]
                 
                 stored_data_temp[keylist["id"]] = keylist
+        print(stored_data_temp)
         return stored_data_temp
     elif "post" in json_response:
         keylist = {}
@@ -70,11 +86,12 @@ def web_data_check():
         if len(json_response["post"]["relationships"]["children"]) > 0:
             keylist["children"] = json_response["post"]["relationships"]["children"]
 
-        print(keylist)
+        #print(keylist)
         stored_data_temp[keylist["id"]] = keylist
         return stored_data_temp
+
 if 'web_data' in globals():
-    #print("I am getting called from fileDownloaderRateLimited")
+    print("I am getting called from fileDownloaderRateLimited")
     stored_data = web_data_check()
 else:
     print("I am getting called from scraper.py . My variables are getting read.")

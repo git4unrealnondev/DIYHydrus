@@ -46,13 +46,19 @@ class CheckBoot():
         universal.scraperHandler = universal.scraper.ScraperClass(universal)
 
         # Overrides scraper creation if scraper option is selected
-        if not args.AddScraper is None and not args.ps:
+        if not args.AddScraper is None:
+            print("b")
             universal.scraperHandler.replace_scraper(args.AddScraper, args.url)
+
+
 
         # Scrapes URL Using scraper Handler.
         if not args.url is None and not args.ps:
+            print("a")
             universal.scraperHandler.scrape(args.url)
-
+        elif args.url is None and args.ps:
+            print("c")
+            universal.scraperHandler.scrape(args.ps, args.AddScraper, args.Search)
         if not args.Search is None:
             universal.commons.search_handler(args.Search)
 
