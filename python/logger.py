@@ -11,7 +11,7 @@ class LoggerHandler():
     '''
     def __init__(self, Dir):
         datetime_object = datetime.datetime.now()
-        self.file_handler = open("./" + str(Dir) + str(datetime_object) + ".txt", "w")
+        self.file_handler = open(str(Dir) + str(datetime_object) + ".txt", "w")
 
     def __del__(self):
         '''

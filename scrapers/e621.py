@@ -6,23 +6,11 @@ By Default scrips have access to universal.
 USER_AGENT = "DIYHydrus/5.0 (Windows NT x.y; rv:10.0) Gecko/20100101 DIYHydrus/10.0"
 RATE_LIMIT = 5
 
-#Custom scripts to parse data
-def web_data_check():
+def handle_data(init_url):
     '''
     Parses data from website
     '''
-
-    init_url = web_data[0]
-    rate_limiter = web_data[1]
-    parent = web_data[2]
-
-    if init_url is None:
-        front = "https://e621.net/posts.json?tags="
-        back = ''
-        parent_url = parent.search_term.replace(" ", "+")
-        init_url =  front + str(parent_url) + back
-
-    #print(init_url)
+#print(init_url)
     json_response = parent.normal_requests(init_url).json()
     to_strip = ["id", "created_at", "sources", "relationships"]
     pull = ["tags"]
@@ -90,6 +78,31 @@ def web_data_check():
         stored_data_temp[keylist["id"]] = keylist
         return stored_data_temp
 
+#Custom scripts to parse data
+def web_data_check():
+
+
+    init_url = web_data[0]
+    rate_limiter = web_data[1]
+    parent = web_data[2]
+
+    if init_url is None:
+        front_pass = "https://e621.net/posts.json?tags="
+        front = "https://e621.net/posts.json?limit=1?tags="
+        back = ''
+        parent_url = parent.search_term.replace(" ", "+")
+        init_url =  front + str(parent_url) + back
+        
+        data = parent.normal_requests(init_url).json()
+        before_id = data["posts"][0]["id"]
+        print(init_url, )
+        
+
+        
+
+    else:
+        return handle_data
+    
 if 'web_data' in globals():
     print("I am getting called from fileDownloaderRateLimited")
     stored_data = web_data_check()
