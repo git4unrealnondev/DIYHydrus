@@ -41,26 +41,26 @@ class ScraperClass():
         SCRAPER_DIR = "scrapers/"
         if not os.path.exists(SCRAPER_DIR):
             os.mkdir(SCRAPER_DIR)
-        
+
         temp_list = []
         #for files in os.listdir(SCRAPER_DIR):
         #    self.replace_scraper(SCRAPER_DIR + files)
 
-        
+
     def scrape(self, url, *args):
         '''
         Checks to see if scraper exists and if it doesn't it will prompt the user to create one.
         '''
-        
+
         #A Search command Has been issued
         if isinstance(url, bool) and not args[0] is None:
             print("User has overridden url splitting or none was applied!!!")
             # Pulling ratelimited INSTANCE TO BE USED
-            
+
             scraper_name = args[0].split('/')[1].split('.')[0]
             search = args[1]
             self.scraper_rate_limited = self.universal.scraper_list[scraper_name]
-            print(self.universal.scraper_list, scraper_name, search)
+            #print(self.universal.scraper_list, scraper_name, search)
             self.scraper_rate_limited.search_term = search
             downloaded_files, parsed_data = self.scraper_rate_limited.request_data()
             self.interpret_data(parsed_data, downloaded_files)
@@ -69,12 +69,12 @@ class ScraperClass():
             # SCRAPER handles the DB calls, sorts things out.
             #downloaded_files, parsed_data = self.scraper_rate_limited.request_data()
             #self.interpret_data(parsed_data, downloaded_files)
-        
+
         #Might not be needed
         #elif url.split('/')[2] in self.universal.scraper_list.keys():
 
 
-            
+
 
 
         #Normal URL has been passed
@@ -87,7 +87,7 @@ class ScraperClass():
             # SCRAPER handles the DB calls, sorts things out.
             downloaded_files, parsed_data = self.scraper_rate_limited.request_data()
             self.interpret_data(parsed_data, downloaded_files)
-            
+
     def interpret_data(self, data, file_data):
         '''
         Parses data from parser into fields the DB can understand.
@@ -98,15 +98,15 @@ class ScraperClass():
             #print("data", each, file_data)
 
             if each in file_data.keys():
-                
+
                 self.universal.databaseRef.file_manager(\
                     file_data[each][1], file_data[each][0], None, file_data[each][0].split('.')[1])
-            
-            else:
-                print(data[each], each)
-                print("super", self.universal.databaseRef.pull_data("File", "id", each))
+
+            #else:
+                #print(data[each], each)
+                #print("super", self.universal.databaseRef.pull_data("File", "id", each))
                 #file_data[each][1] = self.universal.databaseRef.pull_data("File", "id", each)[0][1]
-            
+
 
             for every in data[each]:
 
@@ -148,7 +148,7 @@ class ScraperClass():
             self.universal.pluginManager.callback("database_writing", data[each], file_data[each][1], file_data[each][0])
         self.universal.databaseRef.write()
 
-    
+
     def scraper_list_handler(self, scraper_name, pulled_data, url):
         '''
         Handles scraper objects for rate limiting.
@@ -197,16 +197,16 @@ class ScraperClass():
         args[1] is the URL thats will be scraped
         args[2] is the web_data pulled from fileDownloader
         '''
-        
+
         print("filename", filename)
         for each in args:
             print("args", args.index(each),each)
-        
+
         url = None
-        
+
         if not args[0] is None:
             url = args[0]
-        
+
         # Initing a passthrough Variable
         # loc contains ALL VARIABLES & FUNCTION CALLS IN SCRIPT
         loc = {}
@@ -214,7 +214,7 @@ class ScraperClass():
         if isinstance(args[0], str) or args[0] is None:
             print("type", type(args[0]))
             exec(script, {"universal": self.universal}, loc)
-        
+
         elif args[0] is None:
             print("args[0]")
             pass
@@ -225,15 +225,15 @@ class ScraperClass():
             return loc["stored_data"]
         # Reading scraper into universal memory
         if len(filename.split('/')) > 1 and not url is None and not isinstance(args[0], list):
-            
+
             self.scraper_list_handler(filename.split('/')[1].split('.')[0], loc, url)
-            
+
         else:
             self.scraper_list_handler(filename.split('/')[1].split('.')[0], loc, None)
-        
-        
-        
-        
+
+
+
+
         ## Detecting if URL has been passed into scraper
         #if not args[1] is None:
         #    script_string = args[0]

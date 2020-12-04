@@ -46,13 +46,6 @@ class Database():
         print("Tring to update DB (NOT IMPLEMENTED POGGERS :D)")
         self.universal.log_write.write("Update test")
         print(database_version, program_version)
-        # Example DB Update Script
-        #if int(dv) == 1 and int(pv) == 2:
-        #    # Added in Version 1.1 for parser support
-        #    self.cursor.execute('''CREATE TABLE IF NOT EXISTS " + \
-        #"Parsers(name text, url text, parser text)''')
-        #    print("Upgrading from ", dv, " to ", pv)
-        #    universal.log_write.write("Upgrading from V" + str(dv) + " to V" + str(pv))
 
         self.cursor.execute("UPDATE Settings set num = ? WHERE name = ?",
                             (int(self.VERSION), "VERSION"))
@@ -97,8 +90,6 @@ class Database():
         Handles the namespace data insertion into the DB
         ONLY ADDS NEW x IF NOT PRESENT IN NAMESPACE.
         '''
-        #print(key, self.cursor.execute("SELECT * from Namespace " + \
-        #" WHERE name = '" + key + "'").fetchall()[0])
         if not len(self.cursor.execute("SELECT * from Namespace WHERE name = '" + \
                                        str(urllib.parse.quote(str(key))) + "'").fetchall()) >= 1:
         #if not key in self.cursor.execute("SELECT * from Namespace WHERE name = '" + \
@@ -113,7 +104,7 @@ class Database():
         Same as namespace_manager but with slightly more advanced logic.
         ONLY ADDS NEW x IF NOT PRESENT IN TAGS.
         '''
-       # print(key)
+
         if not len(self.cursor.execute("SELECT * from Tags WHERE name = '" + \
                    str(urllib.parse.quote(str(key))) + "'").fetchall()) >= 1:
             datacpy = self.cursor.execute("SELECT count() from Tags")
@@ -122,8 +113,6 @@ class Database():
             #TO DO add proper parents support
 
             namespace_id = self.pull_data("Namespace", "name", namespace)[0][0]
-            #print("ID", namespace_id, namespace)
-            #print("key", key)
             self.cursor.execute("INSERT INTO Tags(id, name,namespace) VALUES(?, ?, ?)", \
                                 (value, str(urllib.parse.quote(str(key))), namespace_id))
 
@@ -131,7 +120,7 @@ class Database():
         '''
         Adds file into File table in DB
         '''
-        #print(hash, filename,size,ext)
+
         if not len(self.cursor.execute("SELECT * from File WHERE hash = '" + \
                    str(hashes) + "'").fetchall()) >= 1:
         #if not key in self.cursor.execute("SELECT * from Namespace WHERE name = '" \
@@ -142,7 +131,6 @@ class Database():
                                 "VALUES(?, ?, ?, ?, ?)",
                                 (value, hashes, filename, size, ext))
         else:
-            #print("File Manager ignoring hash: ", hash)
             self.hashestoignore.append(hashes)
             #self.universal.log_write.write("File Manager ignoring hash: " + str(hash))
 
@@ -154,10 +142,7 @@ class Database():
                                     str(str(urllib.parse.quote(str(tag)))) + "'").fetchall()
         fileid = self.cursor.execute("SELECT * from File WHERE hash = '" + \
                                      str(hashes) + "'").fetchall()
-        #print ("hash&tag ", hash, fileid[0][0], tag, tagid[0][0])
-        #print(fileid, tagid)
-        #print(tagid[0], fileid[0])
-        #print(tagid, fileid)
+
         if len(tagid) == 1 and len(fileid) == 1:
             if not hashes in self.hashestoignore:
                 self.cursor.execute("INSERT INTO RelationShip(fileid, tagid) " + \
@@ -177,7 +162,7 @@ class Database():
             return self.cursor.execute("SELECT Count( " + str(collumn) + ") from " + str(table) + " WHERE " + str(collumn) + " = '" + str(args[0]) + "'").fetchone()[0]
         else:
             return int(self.cursor.execute("SELECT Count(*) from " + str(table)).fetchone()[0])
-                                  
+
     def delete_data(self, table, column, search_term):
         self.cursor.execute("DELETE FROM " + str(table) + " WHERE " + str(column) + " = " + str(search_term))
 
@@ -198,7 +183,7 @@ class Database():
         Returns the relationship between a tagid and the fileid
         '''
         return self.pull_data("RelationShip", "tagid", tagid)
-        
+
     def search_relationships_file(self, file_id):
         '''
         Returns the relationship between a fileid and the tagid.
@@ -231,7 +216,7 @@ class Database():
 
         self.cursor.execute('''CREATE TABLE File(
                             id INTEGER,
-                            hash text, 
+                            hash text,
                             filename text,
                             size real,
                             ext text)''')
@@ -280,24 +265,24 @@ class Database():
                             "VALUES(?, ?, ?, ?)", \
                             ("DEFAULTUSERAGENT", None, None, default_agent))
         self.write()
-    
+
     def optimized_file_tag_pull(self, file_id):
         tag_data = self.search_relationships_file(file_id)
-        
+
         _list = ""
         for each in tag_data:
             if not tag_data[-1] == each:
                 _list += "id = " + str(each[1]) + " OR "
             else:
                 _list += "id = " + str(each[1])
-        
-        #print(_list)
+
+
         tags = self.cursor.execute("SELECT name FROM Tags where " + _list).fetchall()
         _list = []
         for each in tags:
             _list.append(each[0])
         return _list
-        print(tags)
+
     def pull_all_tags_file(self, file_id):
         '''
         Pulls all tags associated with a file id.

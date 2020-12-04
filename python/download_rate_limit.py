@@ -45,25 +45,16 @@ class InternetHandler():
         '''
         Trims list to hand to scraper for database adding upon untimely close.
         '''
-        #for each in self.formatted_data:
-        #print("Parsed_DATA", self.parsed_data)
-
-        #print("len", len(self.formatted_data), len(self.parsed_data))
 
         data = self.parsed_data
         temp = {}
-
-        #print(self.formatted_data)
-
-        #print(self.parsed_data)
 
         if self.formatted_data is None:
             return None, None
         #Changed
         for each in self.formatted_data:
             temp[each] = data[each]
-        #print(len(data), len(data) - len(self.formatted_data), type(data))
-        #print(len(temp))
+
         return self.formatted_data, temp
 
     @staticmethod
@@ -71,7 +62,7 @@ class InternetHandler():
         '''
         Shows rate limited dialagoue when getting rate limited.
         '''
-        print("Rate Limited for ", until, *args)
+        print("Rate Limited")
 
     def request_data(self):
         '''
@@ -99,14 +90,14 @@ class InternetHandler():
                 self.universal.log_write.write("ERROR PARSER:" + str( \
                                     self._spider[-1].split('/')[2]) + " DID NOT RETURN ANY DATA TO BE PARSED.")
                 raise AttributeError("Stopping program")
-                
+
             tag_to_download = {}
-                
+
             for each in self.parsed_data.keys():
-                #print(self.parsed_data[each]["pic"])
+
                 url_list = self.universal.databaseRef.pull_data("Tags", "name", \
                             str(str(urllib.parse.quote(str(self.parsed_data[each]["pic"])))))
-                #print(url_list)
+
                 del_cleaned_data = False
                 if not len(url_list) == 0:
                     if not url_list[0][1] == []:
@@ -122,25 +113,19 @@ class InternetHandler():
                         print("Will download:", str(self.parsed_data[each]["pic"]), '!')
                         self.universal.log_write.write("Adding file: " + \
                                               str(self.parsed_data[each]["pic"]) + " to DB.")
-                
+
                     if url_list[0][1] == urllib.parse.quote(str(self.parsed_data[each]["pic"])):
                         print("File is already in DB updating info. Not yeet implemented.")
                         tag_to_download[each] = self.cleaned_data[each]
-                
+
                     if del_cleaned_data:
-                        #print("del_data", self.cleaned_data[each], each)
-                        
                         del self.cleaned_data[each]
-                    #print(self.cleaned_data)
-                    #print("tags", self.cleaned_data)
 
             # Using Cleaned keys from DB
             for each in self.cleaned_data.keys():
                 self._pics[self.cleaned_data[each]["id"]] = self.cleaned_data[each]["pic"]
                 self._filename[self.cleaned_data[each]["id"]] = self.cleaned_data[each]["filename"]
-    
-                #print("pics", self._pics)
-    
+
                 # Returns Cleaned data(urls, tags and whatever the parser wants)
              # Returns A list of files downloaded from downloader
             return self.download_pic(), self.cleaned_data
@@ -151,13 +136,13 @@ class InternetHandler():
         Hashes file with sha256.
         '''
         file_hash = hashlib.sha256()
+
         for data in image_ref.iter_content(8192):
             file_hash.update(data)
-        #file_hash.update(image_ref)
-        print(file_hash.hexdigest())
+
         return file_hash.hexdigest()
 
-    
+
     def check_dir(self, hash_input):
         '''
         Creates file storage location if not exist.
@@ -174,7 +159,6 @@ class InternetHandler():
             os.mkdir(self.universal.db_dir + databaseloc + hone)
         if not os.path.isdir(self.universal.db_dir + databaseloc + hone + htwo):
             os.mkdir(self.universal.db_dir + databaseloc + hone + htwo)
-        #print(hone, htwo)
 
         return self.universal.db_dir + databaseloc + hone + htwo
 
