@@ -59,8 +59,8 @@ class CheckBoot():
         elif args.url is None and args.ps:
             print("c")
             universal.scraperHandler.scrape(args.ps, args.AddScraper, args.Search)
-        if not args.Search is None:
-            universal.commons.search_handler(args.Search)
+        if not args.Search is None and not args.ps:
+            universal.commons.search_handler(universal, args.Search)
 
     def __del__(self):
 
@@ -69,7 +69,7 @@ class CheckBoot():
 
         if not universal.pluginManager is None:
             del universal.pluginManager
-            
+
         if not universal.databaseRef is None:
             del universal.databaseRef
 

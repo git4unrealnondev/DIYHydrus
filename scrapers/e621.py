@@ -113,6 +113,9 @@ class FunctionHandler():
                 storage.update(gained_data)
                 counter += 1
                 print(counter, len(storage), len(gained_data))
+                #This is needed because e6 returns NONE if pages are greater then 750.
+                if counter > 750:
+                    loop = False
                 if len(gained_data) <= 5:
                     loop = False
 

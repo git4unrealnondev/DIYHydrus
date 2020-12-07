@@ -92,7 +92,7 @@ class InternetHandler():
                 raise AttributeError("Stopping program")
 
             tag_to_download = {}
-
+            #TODO need to optimize this code for large quotas. Maybe Select * from Tags and parse from their
             for each in self.parsed_data.keys():
 
                 url_list = self.universal.databaseRef.pull_data("Tags", "name", \

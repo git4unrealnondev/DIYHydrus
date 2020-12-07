@@ -10,8 +10,9 @@ class LoggerHandler():
     Handles Log Files Getting Written to disk.
     '''
     def __init__(self, Dir):
-        datetime_object = datetime.datetime.now()
-        self.file_handler = open(str(Dir) + str(datetime_object) + ".txt", "w")
+        self.datetime_object = datetime.datetime.now()
+
+        self.file_handler = open(str(Dir) + str(self.datetime_object) + ".txt", "w")
 
     def __del__(self):
         '''
@@ -24,4 +25,4 @@ class LoggerHandler():
         '''
         Writes the message to log.
         '''
-        self.file_handler.write(message + "\n")
+        self.file_handler.write(str(self.datetime_object) + ": " + message + "\n")

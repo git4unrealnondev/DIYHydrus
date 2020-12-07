@@ -5,7 +5,6 @@ database.py Interacts With Sqlite3 Database.
 import sqlite3
 import sys
 import os
-
 import urllib.parse
 
 class Database():
@@ -24,6 +23,7 @@ class Database():
         self.conn = sqlite3.connect(str(directory) + 'main.db')
         self.cursor = self.conn.cursor()
         self.cursor.execute("VACUUM")
+        self.update_loaded_db()
         #creating universe handler
         self.universal = universal
 
@@ -133,6 +133,15 @@ class Database():
         else:
             self.hashestoignore.append(hashes)
             #self.universal.log_write.write("File Manager ignoring hash: " + str(hash))
+
+    def update_loaded_db(self):
+        '''
+        Loads DB into memory. Makes reading faster
+        '''
+        self.memorydb = {}
+        self.memorydb["Tags"] = self.cursor.execute("SELECT * from Tags").fetchall()
+        self.memorydb["File"] = self.cursor.execute("SELECT * from File").fetchall()
+        self.memorydb["RelationShip"] = self.cursor.execute("SELECT * from RelationShip").fetchall()
 
     def t_and_f_relation_manager(self, hashes, tag):
         '''
@@ -266,7 +275,7 @@ class Database():
                             ("DEFAULTUSERAGENT", None, None, default_agent))
         self.write()
 
-    def optimized_file_tag_pull(self, file_id):
+    def optimized_file_tag_pull(self, table, collumn, file_id):
         tag_data = self.search_relationships_file(file_id)
 
         _list = ""
@@ -276,8 +285,8 @@ class Database():
             else:
                 _list += "id = " + str(each[1])
 
-
-        tags = self.cursor.execute("SELECT name FROM Tags where " + _list).fetchall()
+        tags = self.pull_data(table, collumn, _list)
+        #tags = self.cursor.execute("SELECT " + collumn + " FROM " + table + " where " + _list).fetchall()
         _list = []
         for each in tags:
             _list.append(each[0])
@@ -306,8 +315,37 @@ class Database():
     def pull_data(self, table, collumn, search_term):
         '''
         Handler to return data that gets pulled from the database
+        Now loads stuffs into memory at an insane rate. Very fast much wow.
         '''
-        return self.cursor.execute("SELECT * from " + str(table)
+        id = None
+        search_dict = {
+        "File": {"id": 0, "hash": 1, "filename": 2, "size": 3, "ext": 4},
+        "RelationShip": {"fileid": 0, "tagid": 1},
+        "Tags": {"id": 0, "name": 1, "parents": 2, "namespace": 3}
+        }
+        if table in search_dict:
+            #print(self.cursor.execute("SELECT * from " + str(table)
+            #                       + " WHERE " + str(collumn)
+            #                       + " = '" + str(search_term)
+            #                       + "'").fetchall())
+            return_to_parse = self.memorydb[table]
+            to_return = []
+            for each in return_to_parse:
+                if isinstance(search_term, list):
+                    for every in search_term[search_dict[table][collumn]]:
+                        if each[search_dict[table][collumn]] == every:
+                            to_return.append(each)
+                else:
+                    if each[search_dict[table][collumn]] == search_term:
+                        to_return.append(each)
+                #else:
+                #    print(each, search_term)
+            #print(to_return)
+            return to_return
+
+        else:
+
+            return self.cursor.execute("SELECT * from " + str(table)
                                    + " WHERE " + str(collumn)
                                    + " = '" + str(search_term)
                                    + "'").fetchall()
