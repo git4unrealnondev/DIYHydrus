@@ -134,10 +134,10 @@ class FunctionHandler():
             return handle_data()
 
 if 'web_data' in globals():
-    print("I am getting called from fileDownloaderRateLimited")
+    #print("I am getting called from fileDownloaderRateLimited")
     func_storage = FunctionHandler(web_data)
     stored_data = func_storage.web_data_check()
 else:
-    print("I am getting called from scraper.py . My variables are getting read.")
+    #print("I am getting called from scraper.py . My variables are getting read.")
     # Empty Pass back for laziness
     stored_data = ''

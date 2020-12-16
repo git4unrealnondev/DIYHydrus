@@ -23,7 +23,7 @@ class Database():
         self.conn = sqlite3.connect(str(directory) + 'main.db')
         self.cursor = self.conn.cursor()
         self.cursor.execute("VACUUM")
-        self.update_loaded_db()
+
         #creating universe handler
         self.universal = universal
 
@@ -54,12 +54,15 @@ class Database():
         '''
         Checks Database sanity and ensures that Database is the same version as the others.
         '''
+
+        self.update_loaded_db()
+
         result = self.cursor.execute("SELECT * from Settings WHERE name = 'VERSION'").fetchone()
         if int(result[2]) < self.VERSION:
             self.db_update(result[2], self.VERSION)
         elif int(result[2]) == self.VERSION:
-            self.universal.log_write.write("Up To Date")
-            print("Up To Date")
+            self.universal.log_write.write("Database is Up To Date")
+            print("Database is Up To Date")
         else:
             self.universal.log_write.write("DB is More Advanced along then Program.")
             print("DB is More Advanced along then Program.")
@@ -90,12 +93,15 @@ class Database():
         Handles the namespace data insertion into the DB
         ONLY ADDS NEW x IF NOT PRESENT IN NAMESPACE.
         '''
-        if not len(self.cursor.execute("SELECT * from Namespace WHERE name = '" + \
-                                       str(urllib.parse.quote(str(key))) + "'").fetchall()) >= 1:
+        namespace = self.pull_data("Namespace", "name", str(urllib.parse.quote(str(key))))
+        if not len(namespace) >= 1:
+        #if not len(self.cursor.execute("SELECT * from Namespace WHERE name = '" + \
+        #                               str(urllib.parse.quote(str(key))) + "'").fetchall()) >= 1:
         #if not key in self.cursor.execute("SELECT * from Namespace WHERE name = '" + \
                                            #key + "'").fetchall()[0]:
             datacpy = self.cursor.execute("SELECT count() from Namespace")
             value = datacpy.fetchone()[0] + 1
+            self.memorydb["Namespace"].append((str(value), str(urllib.parse.quote(str(key))), ""))
             self.cursor.execute("INSERT INTO Namespace(id, name, description) VALUES(?, ?, ?)", \
                                 (value, str(urllib.parse.quote(str(key))), ""))
 
@@ -105,14 +111,16 @@ class Database():
         ONLY ADDS NEW x IF NOT PRESENT IN TAGS.
         '''
 
-        if not len(self.cursor.execute("SELECT * from Tags WHERE name = '" + \
-                   str(urllib.parse.quote(str(key))) + "'").fetchall()) >= 1:
+        tags = self.pull_data("Tags", "name", str(urllib.parse.quote(str(key))))
+
+        if not len(tags) >= 1:
             datacpy = self.cursor.execute("SELECT count() from Tags")
             value = datacpy.fetchone()[0] + 1
 
             #TO DO add proper parents support
 
             namespace_id = self.pull_data("Namespace", "name", namespace)[0][0]
+            self.memorydb["Tags"].append((str(value), str(urllib.parse.quote(str(key))), str(namespace_id)))
             self.cursor.execute("INSERT INTO Tags(id, name,namespace) VALUES(?, ?, ?)", \
                                 (value, str(urllib.parse.quote(str(key))), namespace_id))
 
@@ -121,12 +129,15 @@ class Database():
         Adds file into File table in DB
         '''
 
-        if not len(self.cursor.execute("SELECT * from File WHERE hash = '" + \
-                   str(hashes) + "'").fetchall()) >= 1:
+        #if not len(self.cursor.execute("SELECT * from File WHERE hash = '" + \
+        #           str(hashes) + "'").fetchall()) >= 1:
         #if not key in self.cursor.execute("SELECT * from Namespace WHERE name = '" \
                                            #+ key + "'").fetchall()[0]:
+        storage = self.pull_data("File", "hash", str(hashes))
+        if not len(storage) >= 1:
             datacpy = self.cursor.execute("SELECT count() from File")
             value = datacpy.fetchone()[0] + 1
+            self.memorydb["File"].append((str(value), str(hashes), str(filename), str(size), str(ext)))
             self.cursor.execute("INSERT INTO File(id, hash, filename, size, ext) " + \
                                 "VALUES(?, ?, ?, ?, ?)",
                                 (value, hashes, filename, size, ext))
@@ -141,19 +152,24 @@ class Database():
         self.memorydb = {}
         self.memorydb["Tags"] = self.cursor.execute("SELECT * from Tags").fetchall()
         self.memorydb["File"] = self.cursor.execute("SELECT * from File").fetchall()
+        self.memorydb["Namespace"] = self.cursor.execute("SELECT * from Namespace").fetchall()
+        self.memorydb["Settings"] = self.cursor.execute("SELECT * from Settings").fetchall()
         self.memorydb["RelationShip"] = self.cursor.execute("SELECT * from RelationShip").fetchall()
 
     def t_and_f_relation_manager(self, hashes, tag):
         '''
         Handles the relationship adding of hashes and tags
         '''
-        tagid = self.cursor.execute("SELECT * from Tags WHERE name = '" + \
-                                    str(str(urllib.parse.quote(str(tag)))) + "'").fetchall()
-        fileid = self.cursor.execute("SELECT * from File WHERE hash = '" + \
-                                     str(hashes) + "'").fetchall()
+        tagid = self.pull_data("Tags", "name", str(urllib.parse.quote(str(tag))))
+        fileid = self.pull_data("File", "hash", hashes)
+        #tagid = self.cursor.execute("SELECT * from Tags WHERE name = '" + \
+        #                            str(str(urllib.parse.quote(str(tag)))) + "'").fetchall()
+        #fileid = self.cursor.execute("SELECT * from File WHERE hash = '" + \
+        #                             str(hashes) + "'").fetchall()
 
         if len(tagid) == 1 and len(fileid) == 1:
             if not hashes in self.hashestoignore:
+                self.memorydb["RelationShip"].append((str(fileid[0][0]), str(tagid[0][0])))
                 self.cursor.execute("INSERT INTO RelationShip(fileid, tagid) " + \
                                     "VALUES(?, ?)", (fileid[0][0], tagid[0][0]))
 
@@ -321,15 +337,17 @@ class Database():
         search_dict = {
         "File": {"id": 0, "hash": 1, "filename": 2, "size": 3, "ext": 4},
         "RelationShip": {"fileid": 0, "tagid": 1},
-        "Tags": {"id": 0, "name": 1, "parents": 2, "namespace": 3}
+        "Tags": {"id": 0, "name": 1, "parents": 2, "namespace": 3},
+        "Settings": {"name": 0, "pretty": 1, "num": 2, "param": 3},
+        "Namespace": {"ia": 0, "name": 1, "description": 2}
         }
         if table in search_dict:
-            #print(self.cursor.execute("SELECT * from " + str(table)
-            #                       + " WHERE " + str(collumn)
-            #                       + " = '" + str(search_term)
-            #                       + "'").fetchall())
             return_to_parse = self.memorydb[table]
             to_return = []
+
+            if search_term is None:
+                return return_to_parse
+
             for each in return_to_parse:
                 if isinstance(search_term, list):
                     for every in search_term[search_dict[table][collumn]]:
@@ -338,17 +356,15 @@ class Database():
                 else:
                     if each[search_dict[table][collumn]] == search_term:
                         to_return.append(each)
-                #else:
-                #    print(each, search_term)
-            #print(to_return)
             return to_return
 
         else:
-
-            return self.cursor.execute("SELECT * from " + str(table)
+            pull = self.cursor.execute("SELECT * from " + str(table)
                                    + " WHERE " + str(collumn)
                                    + " = '" + str(search_term)
                                    + "'").fetchall()
+            print("Pulling From DB", pull, str(table), str(collumn), str(search_term))
+            return pull
 
     def pull_scrapers(self):
         ''' Returns a list of scrapers '''

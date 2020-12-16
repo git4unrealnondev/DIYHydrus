@@ -1,6 +1,9 @@
 def search_handler(universal, tags):
-    print(tags)
-    result = universal.databaseRef.search_tags(tags)[0][0]
+    try:
+        result = universal.databaseRef.search_tags(tags)[0][0]
+    except IndexError:
+        print("Found no images with that tag.")
+        return
     #print("result", result)
     result = universal.databaseRef.search_relationships(result)
     pulled_fileids = []

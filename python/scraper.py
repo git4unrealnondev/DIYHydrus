@@ -118,7 +118,7 @@ class ScraperClass():
 
                         self.universal.databaseRef.t_and_f_relation_manager(file_data[each][1], tag)
 
-                if isinstance(data[each][every], dict):
+                elif isinstance(data[each][every], dict):
                     for tag in data[each][every].keys():
                         #print('2')
                         self.universal.databaseRef.tag_namespace_manager(tag, every)
@@ -126,7 +126,7 @@ class ScraperClass():
                         self.universal.databaseRef.t_and_f_relation_manager(file_data[each][1], tag)
 
                         #print("Dict", ec, data[each][every][ec])
-                if isinstance(data[each][every], str):
+                elif isinstance(data[each][every], str):
                     #print(data[each][every])
                     #print("every", every, data[each][every])
                     #print('3')
@@ -135,7 +135,7 @@ class ScraperClass():
                     self.universal.databaseRef.t_and_f_relation_manager(\
                             file_data[each][1], data[each][every])
 
-                if isinstance(data[each][every], int):
+                elif isinstance(data[each][every], int):
 
                     #print("every", every, data[each][every])
                     self.universal.databaseRef.tag_namespace_manager(data[each][every], every)
@@ -147,6 +147,8 @@ class ScraperClass():
                 #print(every ,data[each][every])
             self.universal.pluginManager.callback("database_writing", data[each], file_data[each][1], file_data[each][0])
         self.universal.databaseRef.write()
+
+
 
 
     def scraper_list_handler(self, scraper_name, pulled_data, url):
@@ -230,46 +232,6 @@ class ScraperClass():
 
         else:
             self.scraper_list_handler(filename.split('/')[1].split('.')[0], loc, None)
-
-
-
-
-        ## Detecting if URL has been passed into scraper
-        #if not args[1] is None:
-        #    script_string = args[0]
-        #    url = args[1]
-
-        ## URL HAS NOT been passed into scraper
-        #elif args[1] is None:
-        #    script_string = args[0]
-        #    url = None
-        #    #print("I Need the URL for the scraper to work")
-        #    #url = input(": ")
-#
-#        else:
-#            print("A Stupid Code error has happened in run_scraper.")
-#            self.universal.log_write.write("A Stupid Code error has happened in run_scraper.")
-#            self.universal.log_write.write("DEBUG AS FOLLOWS")
-#            self.universal.log_write.write(args)
-#
-#        # Initing a passthrough Variable
-#        # loc contains ALL VARIABLES & FUNCTION CALLS IN SCRIPT
-#        loc = {}
-#        if len(args) == 3:
-#            exec(script_string, {"universal": self.universal, "web_data": args[2]}, loc)
-#	        #print(loc)
-#            return loc['stored_data']
-#        if len(args) != 3 and not url is None:
-#            exec(script_string, {"universal": self.universal}, loc)
-#            # Passes URL to scraper to add to self.universal.scraper_list
-#            self.scraper_list_handler(url.split('/')[2], loc, url)
-#            return None
-#        elif url is None:
-#            print("URL IS NONE", args[0])
-#            exec(script_string, {"universal": self.universal}, loc)
-#            # Passes URL to scraper to add to self.universal.scraper_list
-#            self.scraper_list_handler(args[2], loc, url)
-#        return None
 
     def replace_scraper(self, scraper_file, *args):
         '''
