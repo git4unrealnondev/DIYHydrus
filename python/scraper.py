@@ -94,10 +94,7 @@ class ScraperClass():
         Adds changes to DB and writes on finish.
         '''
         tags_in_db = self.universal.databaseRef.pull_data("Tags", "name", None)
-        for each in data.keys():
-            for every in data[each]:
-                if every in tags_in_db:
-                    data[each].pop(every)
+
         for each in data.keys():
 
             if each in file_data.keys():
