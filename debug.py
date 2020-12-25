@@ -1,36 +1,24 @@
 '''
 A tempory file for me to check stuffs.
 '''
-import time
-from timeit import default_timer as timer
-from multiprocessing import Pool, cpu_count
+import base64
+import ipfshttpclient
 
 
-def power(x, n):
+client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001')
 
-    time.sleep(1)
+def b642str(b64):
+    return base64.b64decode(b64).decode('utf-8')
 
-    print("x", x)
-    print("n", n)
+def create_listener():
+    print("creating listener")
+    with client.pubsub.subscribe('DIYHydrus-IPFS-Pubsub') as sub:
+        try:
+            for message in sub:
+                print(message["from"], b642str(message["data"]), message["seqno"], message["topicIDs"])
 
-def main():
-
-    start = timer()
-
-    print(f'starting computations on {cpu_count()} cores')
-
-    values = \
-        print(type(values), len(values))
-    for each in values:
-        print(each)
-
-    with Pool() as pool:
-        res = pool.starmap(power, values)
-        print(res)
-
-    end = timer()
-    print(f'elapsed time: {end - start}')
-
-
-if __name__ == '__main__':
-    main()
+        except Exception as e:
+            print(e)
+            create_listener()
+            
+create_listener()
