@@ -104,6 +104,7 @@ class FunctionHandler():
             loop = True
             counter = 1
             storage = {}
+            print("Scraper e621 has begun scraping. Please Wait.")
             while loop:
                 #print("L", counter)
                 #self.handle_data("y")
@@ -112,14 +113,14 @@ class FunctionHandler():
                 gained_data = self.handle_data(url)
                 storage.update(gained_data)
                 counter += 1
-                print(counter, len(storage), len(gained_data))
+                print("Scraper is on page:", counter - 1)
                 #This is needed because e6 returns NONE if pages are greater then 750.
                 if counter > 750:
                     loop = False
                 if len(gained_data) <= 5:
                     loop = False
 
-
+            print("Scraper e621 has pulled:", len(storage), "Items from e621.net")
             #Removes and duplicate postings :d
             #FROM https://w3resource.com/python-exercises/dictionary/python-data-type-dictionary-exercise-17.php
             cleaned = {}

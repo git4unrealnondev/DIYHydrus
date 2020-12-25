@@ -93,43 +93,39 @@ class ScraperClass():
         Parses data from parser into fields the DB can understand.
         Adds changes to DB and writes on finish.
         '''
+        tags_in_db = self.universal.databaseRef.pull_data("Tags", "name", None)
         for each in data.keys():
-
-            #print("data", each, file_data)
+            for every in data[each]:
+                if every in tags_in_db:
+                    data[each].pop(every)
+        for each in data.keys():
 
             if each in file_data.keys():
 
                 self.universal.databaseRef.file_manager(\
                     file_data[each][1], file_data[each][0], None, file_data[each][0].split('.')[1])
 
-            #else:
-                #print(data[each], each)
-                #print("super", self.universal.databaseRef.pull_data("File", "id", each))
-                #file_data[each][1] = self.universal.databaseRef.pull_data("File", "id", each)[0][1]
-
-
             for every in data[each]:
 
                 self.universal.databaseRef.namespace_manager(every)
 
                 if isinstance(data[each][every], list):
+
                     for tag in data[each][every]:
+
                         self.universal.databaseRef.tag_namespace_manager(tag, every)
 
                         self.universal.databaseRef.t_and_f_relation_manager(file_data[each][1], tag)
 
                 elif isinstance(data[each][every], dict):
                     for tag in data[each][every].keys():
-                        #print('2')
+
                         self.universal.databaseRef.tag_namespace_manager(tag, every)
 
                         self.universal.databaseRef.t_and_f_relation_manager(file_data[each][1], tag)
 
-                        #print("Dict", ec, data[each][every][ec])
                 elif isinstance(data[each][every], str):
-                    #print(data[each][every])
-                    #print("every", every, data[each][every])
-                    #print('3')
+
                     self.universal.databaseRef.tag_namespace_manager(data[each][every], every)
 
                     self.universal.databaseRef.t_and_f_relation_manager(\
@@ -137,14 +133,11 @@ class ScraperClass():
 
                 elif isinstance(data[each][every], int):
 
-                    #print("every", every, data[each][every])
                     self.universal.databaseRef.tag_namespace_manager(data[each][every], every)
-                    #print('4')
-                    #print(every, data[each][every])
+
                     self.universal.databaseRef.t_and_f_relation_manager(\
                         file_data[each][1], data[each][every])
 
-                #print(every ,data[each][every])
             self.universal.pluginManager.callback("database_writing", data[each], file_data[each][1], file_data[each][0])
         self.universal.databaseRef.write()
 

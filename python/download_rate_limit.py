@@ -68,72 +68,37 @@ class InternetHandler():
         '''
         Pulls data from website and gets a list of pictures to download.
         '''
-        with self.rate_limiter:
-            self.parsed_data = self.universal.scraperHandler.run_scraper(self.filename, self.universal.scraper_store[self.filename], [self._spider[-1], self.rate_limiter, self])
+        self.parsed_data = self.universal.scraperHandler.run_scraper(self.filename, self.universal.scraper_store[self.filename], [self._spider[-1], self.rate_limiter, self])
 
-            # Function cleans files based on picture source already being inside the DB.
-            try:
-                tempstore = self.parsed_data.copy()
-            except AttributeError:
-                print("ERROR PARSER:", str( \
-                                    self._spider[-1].split('/')[2]), "DID NOT RETURN ANY DATA TO BE PARSED.")
-                self.universal.log_write.write("ERROR PARSER:" + str( \
-                                    self._spider[-1].split('/')[2]) + " DID NOT RETURN ANY DATA TO BE PARSED.")
-                raise AttributeError("Stopping program")
+        # Function cleans files based on picture source already being inside the DB.
+        try:
+            tempstore = self.parsed_data.copy()
+        except AttributeError:
+            print("ERROR PARSER:", str( \
+                                self._spider[-1].split('/')[2]), "DID NOT RETURN ANY DATA TO BE PARSED.")
+            self.universal.log_write.write("ERROR PARSER:" + str( \
+                                self._spider[-1].split('/')[2]) + " DID NOT RETURN ANY DATA TO BE PARSED.")
+            raise AttributeError("Stopping program")
 
-            tag_to_download = {}
+        tag_to_download = {}
 
-            #Optimized code for large DB searches
+        #Optimized code for large DB searches
 
-            tag_data = self.universal.databaseRef.pull_data("Tags", "name", None)
-            tag_parsed = [a[:2][1] for a in tag_data]
+        tag_data = self.universal.databaseRef.pull_data("Tags", "name", None)
+        tag_parsed = [a[:2][1] for a in tag_data]
 
-            for each in tag_parsed:
-                if each.isdigit():
-                    if int(each) in tempstore:
-                        tempstore.pop(int(each))
+        for each in tag_parsed:
+            if each.isdigit():
+                if int(each) in tempstore:
+                    tempstore.pop(int(each))
 
-            for each in tempstore:
-                self._pics[tempstore[each]["id"]] = tempstore[each]["pic"]
-                self._filename[tempstore[each]["id"]] = tempstore[each]["filename"]
-            self.download_pic()
+        for each in tempstore:
+            self._pics[tempstore[each]["id"]] = tempstore[each]["pic"]
+            self._filename[tempstore[each]["id"]] = tempstore[each]["filename"]
 
-            #for each in self.parsed_data.keys():
-#
-#                url_list = self.universal.databaseRef.pull_data("Tags", "name", \
-#                            str(str(urllib.parse.quote(str(self.parsed_data[each]["pic"])))))
+        print("I have to download:", len(tempstore), "Files.")
 
-#                del_cleaned_data = False
-#                if not len(url_list) == 0:
-#                    if not url_list[0][1] == []:
-#                        del_cleaned_data = True
-#                        #if not len(url_list) == 0:
-#                        #   print("Not adding", url_list[0][1], "to list to download already in DB.")
-#                        #   self.universal.log_write.write("Not adding" + str(url_list[0][1]) + \
-#                        #                      "to list to download already in DB.")
-#                        #else:
-#                        #   print("adding error")
-#                    else:
-#
-#                        print("Will download:", str(self.parsed_data[each]["pic"]), '!')
-#                        self.universal.log_write.write("Adding file: " + \
-#                                              str(self.parsed_data[each]["pic"]) + " to DB.")
-#
-#                    if url_list[0][1] == urllib.parse.quote(str(self.parsed_data[each]["pic"])):
-#                        print("File is already in DB updating info. Not yeet implemented.")
-#                        tag_to_download[each] = self.cleaned_data[each]
-#
-#                    if del_cleaned_data:
-#                        del self.cleaned_data[each]
-#
-#            # Using Cleaned keys from DB
-#            for each in self.cleaned_data.keys():
-#                self._pics[self.cleaned_data[each]["id"]] = self.cleaned_data[each]["pic"]
-#                self._filename[self.cleaned_data[each]["id"]] = self.cleaned_data[each]["filename"]
-#
-#                # Returns Cleaned data(urls, tags and whatever the parser wants)
-#             # Returns A list of files downloaded from downloader
-#            return self.download_pic(), self.cleaned_data
+        self.download_pic()
 
     @staticmethod
     def hash256(image_ref):

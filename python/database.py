@@ -24,6 +24,9 @@ class Database():
         self.cursor = self.conn.cursor()
         self.cursor.execute("VACUUM")
 
+        #Begins Transaction handling
+        self.conn.execute('BEGIN')
+
         #creating universe handler
         self.universal = universal
 
@@ -99,8 +102,9 @@ class Database():
         #                               str(urllib.parse.quote(str(key))) + "'").fetchall()) >= 1:
         #if not key in self.cursor.execute("SELECT * from Namespace WHERE name = '" + \
                                            #key + "'").fetchall()[0]:
-            datacpy = self.cursor.execute("SELECT count() from Namespace")
-            value = datacpy.fetchone()[0] + 1
+            #datacpy = self.cursor.execute("SELECT count() from Namespace")
+            datacpy = self.return_count("Namespace", "id", None)
+            value = datacpy + 1
             self.memorydb["Namespace"].append((str(value), str(urllib.parse.quote(str(key))), ""))
             self.cursor.execute("INSERT INTO Namespace(id, name, description) VALUES(?, ?, ?)", \
                                 (value, str(urllib.parse.quote(str(key))), ""))
@@ -114,8 +118,9 @@ class Database():
         tags = self.pull_data("Tags", "name", str(urllib.parse.quote(str(key))))
 
         if not len(tags) >= 1:
-            datacpy = self.cursor.execute("SELECT count() from Tags")
-            value = datacpy.fetchone()[0] + 1
+            #datacpy = self.cursor.execute("SELECT count() from Tags")
+            datacpy = self.return_count("Tags", "id", None)
+            value = datacpy + 1
 
             #TO DO add proper parents support
 
@@ -135,8 +140,9 @@ class Database():
                                            #+ key + "'").fetchall()[0]:
         storage = self.pull_data("File", "hash", str(hashes))
         if not len(storage) >= 1:
-            datacpy = self.cursor.execute("SELECT count() from File")
-            value = datacpy.fetchone()[0] + 1
+            #datacpy = self.cursor.execute("SELECT count() from File")
+            datacpy = self.return_count("File", "id", None)
+            value = datacpy + 1
             self.memorydb["File"].append((str(value), str(hashes), str(filename), str(size), str(ext)))
             self.cursor.execute("INSERT INTO File(id, hash, filename, size, ext) " + \
                                 "VALUES(?, ?, ?, ?, ?)",
@@ -183,10 +189,7 @@ class Database():
         '''
         Returns the count of a given collumn with or without search terms
         '''
-        if len(args) > 0:
-            return self.cursor.execute("SELECT Count( " + str(collumn) + ") from " + str(table) + " WHERE " + str(collumn) + " = '" + str(args[0]) + "'").fetchone()[0]
-        else:
-            return int(self.cursor.execute("SELECT Count(*) from " + str(table)).fetchone()[0])
+        return len(self.memorydb[table])
 
     def delete_data(self, table, column, search_term):
         self.cursor.execute("DELETE FROM " + str(table) + " WHERE " + str(column) + " = " + str(search_term))
