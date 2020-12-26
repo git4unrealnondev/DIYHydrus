@@ -12,7 +12,7 @@ def b642str(b64):
 
 def create_listener():
     print("creating listener")
-    with client.pubsub.subscribe('DIYHydrus-IPFS-Pubsub') as sub:
+    with client.pubsub.subscribe('DIYHydrus-IPFS-Pubsub-Introduction') as sub:
         try:
             for message in sub:
                 print(message["from"], b642str(message["data"]), message["seqno"], message["topicIDs"])

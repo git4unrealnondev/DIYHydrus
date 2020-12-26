@@ -16,6 +16,7 @@ class InternetHandler():
     Handles file downloading from scraper.
     '''
     _pics = {}
+    _tag_data = {}
     _spider = []
     _filename = {}
     filename = None
@@ -87,6 +88,7 @@ class InternetHandler():
         tag_data = self.universal.databaseRef.pull_data("Tags", "name", None)
         tag_parsed = [a[:2][1] for a in tag_data]
 
+        #Pulls tagid's from DB
         for each in tag_parsed:
             if each.isdigit():
                 if int(each) in tempstore:
@@ -95,7 +97,7 @@ class InternetHandler():
         for each in tempstore:
             self._pics[tempstore[each]["id"]] = tempstore[each]["pic"]
             self._filename[tempstore[each]["id"]] = tempstore[each]["filename"]
-
+            self._tag_data[tempstore[each]["id"]] = tempstore[each]
         print("I have to download:", len(tempstore), "Files.")
 
         self.download_pic()
@@ -178,7 +180,7 @@ class InternetHandler():
                 #self.parent.interpret_data(temp_dict, self.parsed_data[each])
 
                 #Callback for plugin system
-                self.universal.pluginManager.callback("file_download", filepath, self._filename[each], image_hash)
+                self.universal.pluginManager.callback("file_download", filepath, self._filename[each], image_hash, self._tag_data[each])
 
                 individual_data.append(self._filename[each])
                 individual_data.append(image_hash)

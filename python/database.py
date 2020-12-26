@@ -53,6 +53,18 @@ class Database():
         self.cursor.execute("UPDATE Settings set num = ? WHERE name = ?",
                             (int(self.VERSION), "VERSION"))
         self.write()
+
+    def tag_relationship_checker(self):
+        pass
+        yet = '''namespace_id = self.return_count("Namespace", "id")
+        print(namespace_id)
+        for each in range(1, namespace_id + 1):
+            tag = self.pull_data("Tags", "namespace", each)
+            for each in tag:
+                relationship = self.universal.databaseRef.search_relationships(each[0])
+                if each == 21:
+                    print("F", each, relationship, type(relationship))'''
+
     def db_sanity(self):
         '''
         Checks Database sanity and ensures that Database is the same version as the others.
@@ -77,6 +89,9 @@ class Database():
         if not os.path.exists(self.universal.db_dir + location):
             self.universal.log_write.write("Could not find File Storage Location Creating.")
             os.mkdir(self.universal.db_dir + location)
+
+        #Checking for any errant errors in db
+        self.tag_relationship_checker()
 
     def create_table(self, table_name, db_format):
         '''
@@ -362,10 +377,12 @@ class Database():
             return to_return
 
         else:
+            #This makes the DB be memory only. Not relying on disk. everything
+            #in memory should be same with disk.
             pull = self.cursor.execute("SELECT * from " + str(table)
-                                   + " WHERE " + str(collumn)
-                                   + " = '" + str(search_term)
-                                   + "'").fetchall()
+                + " WHERE " + str(collumn)
+                + " = '" + str(search_term)
+                + "'").fetchall()
             print("Pulling From DB", pull, str(table), str(collumn), str(search_term))
             return pull
 

@@ -40,6 +40,9 @@ class CheckBoot():
 
         self.sanity_check(db_dir)
 
+        #Initilizing Threads
+        universal.ThreadManager = universal.threads.Thread_Handler(universal)
+
         universal.pluginManager = universal.plugin.PluginHandler(universal)
 
         # Creates Scraper Handler for Scraping
@@ -68,6 +71,9 @@ class CheckBoot():
         if not universal.databaseRef is None:
             del universal.databaseRef
 
+        if not universal.ThreadManager is None:
+            del universal.ThreadManager
+
     def sanity_check(self, db_dir):
         '''
         Checks DB Location & Exits if is a file.
@@ -75,6 +81,13 @@ class CheckBoot():
         Returns True if DB exists.
         Returns False if DB does not exist.
         '''
+
+        if not os.access(db_dir, os.W_OK):
+            print("OS CANNOT ACCESS OR DOES NOT HAVE PERMS FOR PATH!!!")
+            universal.log_write = universal.logger.LoggerHandler(db_dir)
+            universal.log_write.write("OS CANNOT ACCESS OR DOES NOT HAVE PERMS FOR PATH!!!")
+            sys.exit(1)
+
 
         if not os.path.exists(db_dir):
             print("DB DIR does not exist :C ", db_dir)
