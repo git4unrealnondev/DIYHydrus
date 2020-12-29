@@ -82,11 +82,11 @@ class CheckBoot():
         Returns False if DB does not exist.
         '''
 
-        if not os.access(db_dir, os.W_OK):
-            print("OS CANNOT ACCESS OR DOES NOT HAVE PERMS FOR PATH!!!")
-            universal.log_write = universal.logger.LoggerHandler(db_dir)
-            universal.log_write.write("OS CANNOT ACCESS OR DOES NOT HAVE PERMS FOR PATH!!!")
-            sys.exit(1)
+        #if not os.access(db_dir, os.W_OK):
+        #    print("OS CANNOT ACCESS OR DOES NOT HAVE PERMS FOR PATH!!!")
+        #    universal.log_write = universal.logger.LoggerHandler(db_dir)
+        #    universal.log_write.write("OS CANNOT ACCESS OR DOES NOT HAVE PERMS FOR PATH!!!")
+        #    sys.exit(1)
 
 
         if not os.path.exists(db_dir):
