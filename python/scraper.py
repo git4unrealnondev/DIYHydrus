@@ -111,7 +111,7 @@ class ScraperClass():
                     for tag in data[each][every]:
 
                         self.universal.databaseRef.tag_namespace_manager(tag, every)
-
+                        print(file_data[each])
                         self.universal.databaseRef.t_and_f_relation_manager(file_data[each][1], tag)
 
                 elif isinstance(data[each][every], dict):
