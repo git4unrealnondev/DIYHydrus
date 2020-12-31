@@ -13,9 +13,9 @@ class PluginHandler():
     universal = None
 
     callbacks = {}
-    
-    callback_list = {"file_download" : [], 
-                    "database_writing":[], 
+
+    callback_list = {"file_download" : [],
+                    "database_writing":[],
                     "":[],
                     "":[],
                     "":[]}
@@ -26,6 +26,7 @@ class PluginHandler():
 
         self.return_py_list()
 
+    def load_in_memory(self):
         self.load_into_memory()
 
     def __del__(self):
@@ -74,7 +75,7 @@ class PluginHandler():
                 self.universal.log_write.write("Plugin: " + str(each) + \
                     " is not a valid plugin and has been removed from loading.")
         print("PLUGINSTOLOAD: ", self.pluginstoload)
-        
+
         #Checks if plugins are in DB run list.
         #for each in self.pluginstoload:
         plugin_check_list = self.universal.databaseRef.pull_data("Settings", "name", "PluginLoadsCheck")
@@ -85,7 +86,7 @@ class PluginHandler():
             plugin_check_list_cleaned.append(each[3])
 
         plugins_not_approved = set(self.pluginstoload) - set(plugin_check_list_cleaned)
-        
+
         for each in plugins_not_approved:
             print("PLUGIN: ", each, "Has not been approved yet! Approve (y or n)")
             user_input = ""
@@ -116,7 +117,7 @@ class PluginHandler():
         calls = {}
         exec(script_string, {"universal": self.universal}, calls)
         self.pluginstore[script_name] = [calls["storage"], calls["hooks"]]
-    
+
     @staticmethod
     def load_file(filename):
         '''
@@ -128,6 +129,5 @@ class PluginHandler():
         with open(filename, "r") as infile:
             for each in infile:
                 script_string += each + "\n"
-                
+
         return script_string
-                

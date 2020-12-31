@@ -43,10 +43,12 @@ class CheckBoot():
         #Initilizing Threads
         universal.ThreadManager = universal.threads.Thread_Handler(universal)
 
+        universal.pluginManager = universal.plugin.PluginHandler(universal)
+
         # Creates Scraper Handler for Scraping
         universal.scraperHandler = universal.scraper.ScraperClass(universal)
 
-        universal.pluginManager = universal.plugin.PluginHandler(universal)
+        universal.pluginManager.load_in_memory()
 
         # Overrides scraper creation if scraper option is selected
         if not args.AddScraper is None:
