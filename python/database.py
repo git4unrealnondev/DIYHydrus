@@ -19,8 +19,8 @@ class Database():
         '''
         Creates Connector and Cursor for Database Interaction
         '''
-        #self.conn = sqlite3.connect(str(directory) + 'main.db', check_same_thread=False)
-        self.conn = sqlite3.connect(str(directory) + 'main.db')
+        self.conn = sqlite3.connect(str(directory) + 'main.db', check_same_thread=False)
+        #self.conn = sqlite3.connect(str(directory) + 'main.db')
         self.cursor = self.conn.cursor()
         self.cursor.execute("VACUUM")
 
