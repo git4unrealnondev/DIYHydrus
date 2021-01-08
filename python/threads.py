@@ -21,8 +21,8 @@ class MyThread(threading.Thread):
         self.stdoutmutex = threading.Lock()
         self.function_call = func
         print(args)
-        self.arguments = args[0][0]
-
+        self.arguments = args[0][1]
+        self.classref = args[0][0]
 
 
     def stop(self):
@@ -36,7 +36,7 @@ class MyThread(threading.Thread):
         try:
             #calls the function gives the function a ref to thread.
             #print(self.function_call, self.arguments)
-            self.function_call(self.arguments, self)
+            self.function_call(self.classref, self.arguments, self)
         except Exception as e:
             print("In thread handler their was an error.")
             print(e)
