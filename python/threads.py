@@ -36,7 +36,7 @@ class MyThread(threading.Thread):
         try:
             #calls the function gives the function a ref to thread.
             #print(self.function_call, self.arguments)
-            self.function_call(self.classref, self.arguments, self)
+            self.classref.function_call(self.classref, self.arguments, self)
         except Exception as e:
             print("In thread handler their was an error.")
             print(e)
