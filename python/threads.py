@@ -64,21 +64,3 @@ class Thread_Handler():
             thread_pointer.stop()
             thread_pointer.join()
             self.thread_list.pop(thread_pointer)
-
-
-
-if __name__ == '__main__':
-
-    threads = []
-    for i in range(999000):
-        # Create the new Thread Object
-        thread = MyThread(i, 99900, stdoutmutex)
-
-        # The thread doesn't actually start running until
-        # start() is called
-        thread.start()
-        threads.append(thread)
-
-
-
-    print('Main thread exiting...')
