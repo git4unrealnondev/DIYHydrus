@@ -54,6 +54,13 @@ class Database():
                             (int(self.VERSION), "VERSION"))
         self.write()
 
+    def return_working_dir(self):
+        '''
+        Really lazy solution am sorry.
+        Their's probably a better place to put this...
+        '''
+        return os.getcwd()
+
     def tag_relationship_checker(self):
         pass
         yet = '''namespace_id = self.return_count("Namespace", "id")
