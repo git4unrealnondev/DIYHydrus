@@ -182,6 +182,11 @@ class InternetHandler():
                 #Callback for plugin system
                 self.universal.pluginManager.callback("file_download", filepath, self._filename[each], image_hash, self._tag_data[each])
 
+                #Test to enable live processing of data
+                self.universal.scraperHandler.interpret_data({"Empty": self._tag_data[each]}, {"Empty": [ self._filename[each], image_hash]})
+
+                #print(self.universal.databaseRef.memorydb)
+
                 individual_data.append(self._filename[each])
                 individual_data.append(image_hash)
 

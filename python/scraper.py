@@ -25,12 +25,12 @@ class ScraperClass():
 
     def __del__(self):
         if not self.scraper_rate_limited is None:
-            downloaded_files, parsed_data = self.scraper_rate_limited.removal()
-
-            if downloaded_files is None and parsed_data is None:
-                return
+            #downloaded_files, parsed_data = self.scraper_rate_limited.removal()
+            self.universal.databaseRef.write()
+            #if downloaded_files is None and parsed_data is None:
+            #    return
             # Interprets and prepares data for database.
-            self.interpret_data(parsed_data, downloaded_files)
+            #self.interpret_data(parsed_data, downloaded_files)
             #for each in self.universal.scraper_store:
             #    each.removal()
 
@@ -62,8 +62,9 @@ class ScraperClass():
             self.scraper_rate_limited = self.universal.scraper_list[scraper_name]
             #print(self.universal.scraper_list, scraper_name, search)
             self.scraper_rate_limited.search_term = search
-            downloaded_files, parsed_data = self.scraper_rate_limited.request_data()
-            self.interpret_data(parsed_data, downloaded_files)
+            self.scraper_rate_limited.request_data()
+            #downloaded_files, parsed_data = self.scraper_rate_limited.request_data()
+            #self.interpret_data(parsed_data, downloaded_files)
             #self.scraper_rate_limited = self.universal.scraper_list[url.split('/')[2]]
 
             # SCRAPER handles the DB calls, sorts things out.
@@ -92,6 +93,13 @@ class ScraperClass():
         '''
         Parses data from parser into fields the DB can understand.
         Adds changes to DB and writes on finish.
+        file_data : dict
+        value is a list where the 1 is a hash, 0 is the filename.
+        data : dict
+        value is data that needs to be parsed.
+        IE:
+        file_data {"abc" : ["filename.jpg", "hash"]}
+        data {"abc" : {"namespace" : "tag1", "namespace_2" : ["beans", "123"]}}
         '''
         tags_in_db = self.universal.databaseRef.pull_data("Tags", "name", None)
 
@@ -136,7 +144,7 @@ class ScraperClass():
                         file_data[each][1], data[each][every])
 
             self.universal.pluginManager.callback("database_writing", data[each], file_data[each][1], file_data[each][0])
-        self.universal.databaseRef.write()
+
 
 
 
