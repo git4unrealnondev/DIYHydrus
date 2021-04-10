@@ -15,15 +15,15 @@ class CheckBoot():
     Initalizes DB
     '''
     def __init__(self):
-        parser = argparse.ArgumentParser(description='Custom Databasing Program')
-        parser.add_argument('-d', "--dbDir", type=str, help='Alternative DB Location')
-        parser.add_argument('-u', "--url", type=str, help='url for test scraping')
-        parser.add_argument('-a', "--AddScraper", type=str, help='Adds a scraper to Database')
-        parser.add_argument('-s', "--Search", type=str, help='Searches DB use quotes when spacing')
-        parser.add_argument('-v', "--verbose", type=str, help='Enables Verbose Logging' + \
+        self.parser = argparse.ArgumentParser(description='Custom Databasing Program')
+        self.parser.add_argument('-d', "--dbDir", type=str, help='Alternative DB Location')
+        self.parser.add_argument('-u', "--url", type=str, help='url for test scraping')
+        self.parser.add_argument('-a', "--AddScraper", type=str, help='Adds a scraper to Database')
+        self.parser.add_argument('-s', "--Search", type=str, help='Searches DB use quotes when spacing')
+        self.parser.add_argument('-v', "--verbose", type=str, help='Enables Verbose Logging' + \
             'NOT YET IMPLEMENTED')
-        parser.add_argument('-ps', action="store_true",help='Searches query with parser')
-        args = parser.parse_args()
+        self.parser.add_argument('-ps', action="store_true",help='Searches query with parser')
+        args = self.parser.parse_args()
 
         if args.verbose is None:
             self.verbose = False
@@ -56,10 +56,13 @@ class CheckBoot():
 
         # Scrapes URL Using scraper Handler.
         if not args.url is None and not args.ps:
+            print("bbbb")
             universal.scraperHandler.scrape(args.url)
         elif args.url is None and args.ps:
+            print("123av")
             universal.scraperHandler.scrape(args.ps, args.AddScraper, args.Search)
         if not args.Search is None and not args.ps:
+            print("123avaaaaaaa")
             universal.commons.search_handler(universal, args.Search)
 
     def __del__(self):
@@ -107,6 +110,7 @@ class CheckBoot():
             if self.verbose:
                 print("DB ALREADY EXISTS")
             universal.log_write.write("DB EXISTS.")
+            universal.log_write.write(self.parser.parse_args().Search)
             universal.databaseRef = universal.database.Database(db_dir, universal)
             universal.databaseRef.db_sanity()
         else:

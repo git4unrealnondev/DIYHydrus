@@ -22,7 +22,7 @@ class Database():
         self.conn = sqlite3.connect(str(directory) + 'main.db', check_same_thread=False)
         #self.conn = sqlite3.connect(str(directory) + 'main.db')
         self.cursor = self.conn.cursor()
-        self.cursor.execute("VACUUM")
+        #self.cursor.execute("VACUUM")
 
         #Begins Transaction handling
         self.conn.execute('BEGIN')
@@ -220,7 +220,7 @@ class Database():
         '''
         Returns the tag ids that matches the tags.
         '''
-        return self.pull_data("Tags", "id", str(tag_id))
+        return self.pull_data("Tags", "id", int(tag_id))
 
     def search_tags(self, tags):
         '''

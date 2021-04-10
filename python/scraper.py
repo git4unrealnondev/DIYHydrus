@@ -3,6 +3,7 @@ Handler For Loading and Deploying Scrapers
 """
 import python.global_vars as universal
 import os
+import sys
 
 class ScraperClass():
     '''
@@ -57,7 +58,7 @@ class ScraperClass():
             print("User has overridden url splitting or none was applied!!!")
             # Pulling ratelimited INSTANCE TO BE USED
 
-            scraper_name = args[0].split('/')[1].split('.')[0]
+            scraper_name = args[0]
             search = args[1]
             self.scraper_rate_limited = self.universal.scraper_list[scraper_name]
             #print(self.universal.scraper_list, scraper_name, search)
@@ -221,15 +222,22 @@ class ScraperClass():
         # Runs Scraper
         else:
             print("args", args[0], type(args[0]))
-            exec(script, {"universal": self.universal, "web_data": args[0]}, loc)
-            return loc["stored_data"]
+            try:
+                exec(script, {"universal": self.universal, "web_data": args[0]}, loc)
+                return loc["stored_data"]
+            except Exception as E:
+            
+                print("Something went wrong while running your scraper. Please see error message below")
+                print(E)
+                sys.exit(1)
         # Reading scraper into universal memory
         if len(filename.split('/')) > 1 and not url is None and not isinstance(args[0], list):
 
-            self.scraper_list_handler(filename.split('/')[1].split('.')[0], loc, url)
+            self.scraper_list_handler(filename, loc, url)
 
         else:
-            self.scraper_list_handler(filename.split('/')[1].split('.')[0], loc, None)
+            print(filename)
+            self.scraper_list_handler(filename, loc, None)
 
     def replace_scraper(self, scraper_file, *args):
         '''
@@ -237,15 +245,18 @@ class ScraperClass():
         '''
         script_string = ""
 
+        scraper_append = "./scrapers/" + scraper_file + ".py"
+
         #Reads script into memory
-        with open(scraper_file, "r") as infile:
+        with open(scraper_append, "r") as infile:
             for each in infile:
                 script_string += each + "\n"
 
         #Places Script into scraper_store
         if not script_string is None:
             try:
-                self.universal.scraper_store[scraper_file.split('/')[1].split('.')[0]] = script_string
+                print(scraper_file)
+                self.universal.scraper_store[scraper_file] = script_string
             except AttributeError:
                 print("I see that you have not specified URL's")
 
