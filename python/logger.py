@@ -3,14 +3,14 @@ logger.py writes error logs in DB file directory or Current Working Dir if not s
 
 '''
 
-import datetime
+from datetime import datetime
 
 class LoggerHandler():
     '''
     Handles Log Files Getting Written to disk.
     '''
     def __init__(self, Dir):
-        self.datetime_object = datetime.datetime.now()
+        self.datetime_object = datetime.now()
 
         self.file_handler = open(str(Dir) + str(self.datetime_object) + ".txt", "w")
 
@@ -25,4 +25,4 @@ class LoggerHandler():
         '''
         Writes the message to log.
         '''
-        self.file_handler.write(str(self.datetime_object) + ": " + message + "\n")
+        self.file_handler.write(str(str(datetime.now()) + ": " + str(message) + "\n"))

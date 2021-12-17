@@ -8,7 +8,7 @@ import requests
 
 from ratelimiter import RateLimiter
 
-#import python.global_vars as universal
+import python.global_vars as universal
 
 
 class InternetHandler():
@@ -55,7 +55,6 @@ class InternetHandler():
         #Changed
         for each in self.formatted_data:
             temp[each] = data[each]
-
         return self.formatted_data, temp
 
     @staticmethod
@@ -65,11 +64,15 @@ class InternetHandler():
         '''
         print("Rate Limited")
 
-    def request_data(self):
+    def request_data(self, *args):
         '''
         Pulls data from website and gets a list of pictures to download.
         '''
-        self.parsed_data = self.universal.scraperHandler.run_scraper(self.filename, self.universal.scraper_store[self.filename], [self._spider[-1], self.rate_limiter, self])
+        if len(args) == 0:
+            self.parsed_data = self.universal.scraperHandler.run_scraper(self.filename, self.universal.scraper_store[self.filename], [self._spider[-1], self.rate_limiter, self])
+        else:
+            #                                                                                               fileneame      script
+            self.parsed_data = self.universal.scraperHandler.run_scraper(self.filename, self.universal.scraper_store[self.filename], [args[0], self.rate_limiter, self])
 
         # Function cleans files based on picture source already being inside the DB.
         try:
@@ -141,13 +144,20 @@ class InternetHandler():
     def download_tags(self):
         print("tags")
 
+    def check_if_file(self):
+        """
+        TODO: Their needs to be a way that i can check if i already downloaded a file.
+        Going to be hard currently am using file hash to generate location
+        """
+        pass
     def download_pic(self):
         '''
         Downloads pictures to storage.
         @return List of files that has been downloaded (used for shutdown)
         '''
         self.formatted_data = {}
-        print("Download Pic")
+        if universal.verbose:
+            print("Download Pic")
         # TODO NEED to make a way to stop this from downloading to prevent an ugly error message.
 
         # NEEDS TO BE IN THIS ORDER FOR RATE LIMITING TO WORK PROPERLY

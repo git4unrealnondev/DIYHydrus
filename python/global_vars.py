@@ -15,3 +15,6 @@ scraperHandler = None
 databaseRef = None
 pluginManager = None
 ThreadManager = None
+
+#Variables
+verbose = False

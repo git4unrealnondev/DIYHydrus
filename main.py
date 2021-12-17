@@ -20,15 +20,18 @@ class CheckBoot():
         self.parser.add_argument('-u', "--url", type=str, help='url for test scraping')
         self.parser.add_argument('-a', "--AddScraper", type=str, help='Adds a scraper to Database')
         self.parser.add_argument('-s', "--Search", type=str, help='Searches DB use quotes when spacing')
-        self.parser.add_argument('-v', "--verbose", type=str, help='Enables Verbose Logging' + \
+        self.parser.add_argument('-v', "--verbose", action="store_true", help='Enables Verbose Logging' + \
             'NOT YET IMPLEMENTED')
         self.parser.add_argument('-ps', action="store_true",help='Searches query with parser')
+        self.parser.add_argument('-i', "--inherit", type=str, help='Inherits previous database into current. (Merges with.)')
         args = self.parser.parse_args()
 
-        if args.verbose is None:
+        if not args.verbose:
             self.verbose = False
+            universal.verbose = False
         else:
             self.verbose = True
+            universal.verbose = True
 
         if args.dbDir is None:
             db_dir = "db/"
@@ -37,6 +40,9 @@ class CheckBoot():
 
         # Used by fileDownloader
         universal.db_dir = db_dir
+
+        #Setting up the logger for writing logs
+        universal.log_write = universal.logger.LoggerHandler(db_dir)
 
         self.sanity_check(db_dir)
 
@@ -50,16 +56,23 @@ class CheckBoot():
 
         universal.pluginManager.load_in_memory()
 
+        if not args.inherit is None:
+            universal.databaseRef.inherit_db(args.inherit)
+
+
+            return
+
         # Overrides scraper creation if scraper option is selected
         if not args.AddScraper is None:
             universal.scraperHandler.replace_scraper(args.AddScraper, args.url)
 
         # Scrapes URL Using scraper Handler.
         if not args.url is None and not args.ps:
-            print("bbbb")
+            print("bbbb", args.url)
             universal.scraperHandler.scrape(args.url)
         elif args.url is None and args.ps:
-            print("123av")
+            if universal.verbose:
+                print("URL IS NONE and PS SWITCHED")
             universal.scraperHandler.scrape(args.ps, args.AddScraper, args.Search)
         if not args.Search is None and not args.ps:
             print("123avaaaaaaa")
@@ -74,6 +87,7 @@ class CheckBoot():
             del universal.pluginManager
 
         if not universal.databaseRef is None:
+
             del universal.databaseRef
 
         if not universal.ThreadManager is None:
@@ -87,13 +101,6 @@ class CheckBoot():
         Returns False if DB does not exist.
         '''
 
-        #if not os.access(db_dir, os.W_OK):
-        #    print("OS CANNOT ACCESS OR DOES NOT HAVE PERMS FOR PATH!!!")
-        #    universal.log_write = universal.logger.LoggerHandler(db_dir)
-        #    universal.log_write.write("OS CANNOT ACCESS OR DOES NOT HAVE PERMS FOR PATH!!!")
-        #    sys.exit(1)
-
-
         if not os.path.exists(db_dir):
             print("DB DIR does not exist :C ", db_dir)
             os.mkdir(db_dir)
@@ -101,20 +108,20 @@ class CheckBoot():
         if os.path.exists(db_dir) and os.path.isfile(db_dir):
             if self.verbose:
                 print("ERROR DB IS FILE?")
-            universal.log_write = universal.logger.LoggerHandler(db_dir)
+           # universal.log_write = universal.logger.LoggerHandler(db_dir)
             universal.log_write.write("INCORRECT DB LOCATION, IS A FILE???")
             sys.exit()
 
         if os.path.exists(db_dir + "main.db"):
-            universal.log_write = universal.logger.LoggerHandler(db_dir)
+            #universal.log_write = universal.logger.LoggerHandler(db_dir)
             if self.verbose:
                 print("DB ALREADY EXISTS")
-            universal.log_write.write("DB EXISTS.")
+            #universal.log_write.write("DB EXISTS.")
             universal.log_write.write(self.parser.parse_args().Search)
             universal.databaseRef = universal.database.Database(db_dir, universal)
             universal.databaseRef.db_sanity()
         else:
-            universal.log_write = universal.logger.LoggerHandler(db_dir)
+            #universal.log_write = universal.logger.LoggerHandler(db_dir)
             if self.verbose:
                 print("DB DOES NOT EXIST")
             universal.log_write.write("DB Does not exist Creating at Default Dir.")

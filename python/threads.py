@@ -1,3 +1,4 @@
+import os
 import threading
 import multiprocessing
 
@@ -47,12 +48,23 @@ class Thread_Handler():
     def __init__(self, universe):
         self.universal = universe
 
+        #Sets # of threads to use
+        self.THREAD_POOL_SIZE = os.cpu_count() - 1
+
+
     def delete(self):
         print("Waiting for threads to exit...")
         for thread in self.thread_list:
             thread.stop()
         for thread in self.thread_list:
             thread.join()
+
+    def multiprocessing_pool(self, func, *args):
+        """
+        Creates a multiprocessing_pool maxing out CPU_count
+        """
+        p = multiprocessing.Pool(self.THREAD_POOL_SIZE)
+        p.map(func, args)
 
     def run_in_thread(self, func, *args):
         new_thread = MyThread(func, args)
@@ -64,3 +76,5 @@ class Thread_Handler():
             thread_pointer.stop()
             thread_pointer.join()
             self.thread_list.pop(thread_pointer)
+
+

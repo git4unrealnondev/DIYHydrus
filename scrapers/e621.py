@@ -41,7 +41,6 @@ class FunctionHandler():
                 if not each["file"]["url"] is None:
                     keylist["md5"] = each["file"]["md5"]
                     keylist["size"] = each["file"]["size"]
-            #print(each["file"]["url"], each['file'])
                     keylist["filename"] = each["file"]["url"].split("/")[6]
                     keylist["pic"] = each["file"]["url"]
                     keylist["rating"] = each["rating"]
@@ -127,12 +126,22 @@ class FunctionHandler():
             for key, value in storage.items():
                 if value not in cleaned.values():
                     cleaned[key] = value
-
-
             return cleaned
         else:
-            print("A")
-            return handle_data()
+            # Handles individual urls in e6 land
+            #URL Has been passed into scraper beginning colussion...
+            if "?q=" in init_url:
+                url_head = init_url.split("?q=")[0]
+                url_total= url_head + ".json"
+
+            cleaned = {}
+            storage = self.handle_data(url_total)
+            for key, value in storage.items():
+                if value not in cleaned.values():
+                    cleaned[key] = value
+            return cleaned
+
+            #return self.handle_data(url_total)
 
 if 'web_data' in globals():
     #print("I am getting called from fileDownloaderRateLimited")

@@ -17,6 +17,7 @@ def search_handler(universal, tags):
         fintag = []
         for rtag in rawtag:
             fintag.append(universal.databaseRef.search_tagid(int(rtag[1]))[0][1])
-        print("./" + universal.db_dir + "Files/" + tmp[0][1][0] + tmp[0][1][1] + "/" + tmp[0][1][2] + tmp[0][1][3] + "/" + tmp[0][2], str(fintag))
+        #print("./" + universal.db_dir + "Files/" + tmp[0][1][0] + tmp[0][1][1] + "/" + tmp[0][1][2] + tmp[0][1][3] + "/" + tmp[0][2], str(fintag))
         print()
+        print(fintag)
        

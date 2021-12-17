@@ -5,7 +5,10 @@ database.py Interacts With Sqlite3 Database.
 import sqlite3
 import sys
 import os
+import numpy as np
 import urllib.parse
+
+import python.global_vars as universal
 
 class Database():
     '''
@@ -127,9 +130,18 @@ class Database():
             #datacpy = self.cursor.execute("SELECT count() from Namespace")
             datacpy = self.return_count("Namespace", "id", None)
             value = datacpy + 1
-            self.memorydb["Namespace"].append((str(value), str(urllib.parse.quote(str(key))), ""))
+            #self.memorydb["Namespace"].append((str(value), str(urllib.parse.quote(str(key))), ""))
+            #self.memorydb["Namespace"] = np.append(self.memorydb["Namespace"], [[int(value), str(urllib.parse.quote(str(key))),""]], axis=0)
+            try:
+                self.memorydb["Namespace"] = np.vstack([self.memorydb["Namespace"], [str(value), str(urllib.parse.quote(str(key))),""]])
+            except ValueError as E:
+                print("making namespace array")
+                self.memorydb["Namespace"] = np.array([[str(value), str(urllib.parse.quote(str(key))),""]])
+
+
             self.cursor.execute("INSERT INTO Namespace(id, name, description) VALUES(?, ?, ?)", \
                                 (value, str(urllib.parse.quote(str(key))), ""))
+            datacpy = self.return_count("Namespace", "id", None)
 
     def tag_namespace_manager(self, key, namespace):
         '''
@@ -147,7 +159,12 @@ class Database():
             #TO DO add proper parents support
 
             namespace_id = self.pull_data("Namespace", "name", namespace)[0][0]
-            self.memorydb["Tags"].append((str(value), str(urllib.parse.quote(str(key))), str(namespace_id)))
+            #self.memorydb["Tags"] = np.append(self.memorydb["Tags"], [[str(value), str(urllib.parse.quote(str(key))), str(namespace_id)]], axis=0)
+
+            try:
+                self.memorydb["Tags"] = np.vstack([self.memorydb["Tags"], [str(value), str(urllib.parse.quote(str(key))), str(namespace_id)]])
+            except ValueError as E:
+                self.memorydb["Tags"] = np.array([[str(value), str(urllib.parse.quote(str(key))), str(namespace_id)]])
             self.cursor.execute("INSERT INTO Tags(id, name,namespace) VALUES(?, ?, ?)", \
                                 (value, str(urllib.parse.quote(str(key))), namespace_id))
 
@@ -156,16 +173,16 @@ class Database():
         Adds file into File table in DB
         '''
 
-        #if not len(self.cursor.execute("SELECT * from File WHERE hash = '" + \
-        #           str(hashes) + "'").fetchall()) >= 1:
-        #if not key in self.cursor.execute("SELECT * from Namespace WHERE name = '" \
-                                           #+ key + "'").fetchall()[0]:
         storage = self.pull_data("File", "hash", str(hashes))
         if not len(storage) >= 1:
             #datacpy = self.cursor.execute("SELECT count() from File")
             datacpy = self.return_count("File", "id", None)
             value = datacpy + 1
-            self.memorydb["File"].append((str(value), str(hashes), str(filename), str(size), str(ext)))
+            #self.memorydb["File"] = np.append(self.memorydb["File"], [[str(value), str(hashes), str(filename), str(size), str(ext)]], axis=0)
+            try:
+                self.memorydb["File"] = np.vstack([self.memorydb["File"], [[str(value), str(hashes), str(filename), str(size), str(ext)]]])
+            except ValueError as E:
+                self.memorydb["File"] = np.array([[str(value), str(hashes), str(filename), str(size), str(ext)]])
             self.cursor.execute("INSERT INTO File(id, hash, filename, size, ext) " + \
                                 "VALUES(?, ?, ?, ?, ?)",
                                 (value, hashes, filename, size, ext))
@@ -178,11 +195,11 @@ class Database():
         Loads DB into memory. Makes reading faster
         '''
         self.memorydb = {}
-        self.memorydb["Tags"] = self.cursor.execute("SELECT * from Tags").fetchall()
-        self.memorydb["File"] = self.cursor.execute("SELECT * from File").fetchall()
-        self.memorydb["Namespace"] = self.cursor.execute("SELECT * from Namespace").fetchall()
-        self.memorydb["Settings"] = self.cursor.execute("SELECT * from Settings").fetchall()
-        self.memorydb["RelationShip"] = self.cursor.execute("SELECT * from RelationShip").fetchall()
+        self.memorydb["Tags"] = np.array(self.cursor.execute("SELECT * from Tags").fetchall())
+        self.memorydb["File"] = np.array(self.cursor.execute("SELECT * from File").fetchall())
+        self.memorydb["Namespace"] = np.array(self.cursor.execute("SELECT * from Namespace").fetchall())
+        self.memorydb["Settings"] = np.array(self.cursor.execute("SELECT * from Settings").fetchall())
+        self.memorydb["RelationShip"] = np.array(self.cursor.execute("SELECT * from RelationShip").fetchall())
 
     def t_and_f_relation_manager(self, hashes, tag):
         '''
@@ -197,7 +214,11 @@ class Database():
 
         if len(tagid) == 1 and len(fileid) == 1:
             if not hashes in self.hashestoignore:
-                self.memorydb["RelationShip"].append((str(fileid[0][0]), str(tagid[0][0])))
+                try:
+                    self.memorydb["RelationShip"] = np.vstack([self.memorydb["RelationShip"], [[str(fileid[0][0]), str(tagid[0][0])]]])
+                except ValueError as E:
+                    self.memorydb["RelationShip"] = np.array([str(fileid[0][0]), str(tagid[0][0])])
+                #self.memorydb["RelationShip"].append((str(fileid[0][0]), str(tagid[0][0])))
                 self.cursor.execute("INSERT INTO RelationShip(fileid, tagid) " + \
                                     "VALUES(?, ?)", (fileid[0][0], tagid[0][0]))
 
@@ -353,47 +374,164 @@ class Database():
                                    + "'").fetchall()
 
     #TO DO Cache returns to here in memory for further optimizations.
-    def pull_data(self, table, collumn, search_term):
+    def pull_data(self, table, collumn, search_term, *args):
         '''
         Handler to return data that gets pulled from the database
         Now loads stuffs into memory at an insane rate. Very fast much wow.
         '''
+
+        #Sets custom memdb location for usage with inheriting db
+        custom_db = False
+        if len(args) > 0:
+            custom_db = True
+
+
         id = None
         search_dict = {
         "File": {"id": 0, "hash": 1, "filename": 2, "size": 3, "ext": 4},
         "RelationShip": {"fileid": 0, "tagid": 1},
         "Tags": {"id": 0, "name": 1, "parents": 2, "namespace": 3},
         "Settings": {"name": 0, "pretty": 1, "num": 2, "param": 3},
-        "Namespace": {"ia": 0, "name": 1, "description": 2}
+        "Namespace": {"id": 0, "name": 1, "description": 2}
         }
         if table in search_dict:
-            return_to_parse = self.memorydb[table]
+            if custom_db:
+                 return_to_parse = args[0][table]
+            else:
+                return_to_parse = self.memorydb[table]
             to_return = []
 
             if search_term is None:
                 return return_to_parse
 
+            #if not search_term in return_to_parse:
+            #    print()
+
             for each in return_to_parse:
                 if isinstance(search_term, list):
                     for every in search_term[search_dict[table][collumn]]:
+                        #print(search_dict[table][collumn], each, search_term)
                         if each[search_dict[table][collumn]] == every:
                             to_return.append(each)
                 else:
-                    if each[search_dict[table][collumn]] == search_term:
-                        to_return.append(each)
+
+                    try:
+                        if each[search_dict[table][collumn]] == search_term :
+                            to_return.append(each)
+                    except Exception as E:
+                        continue
             return to_return
 
         else:
             #This makes the DB be memory only. Not relying on disk. everything
             #in memory should be same with disk.
-            pull = self.cursor.execute("SELECT * from " + str(table)
-                + " WHERE " + str(collumn)
-                + " = '" + str(search_term)
-                + "'").fetchall()
-            print("Pulling From DB", pull, str(table), str(collumn), str(search_term))
-            return pull
+            if not custom_db:
+                pull = self.cursor.execute("SELECT * from " + str(table)
+                    + " WHERE " + str(collumn)
+                    + " = '" + str(search_term)
+                    + "'").fetchall()
+                print("Pulling From DB", pull, str(table), str(collumn), str(search_term))
+                return pull
+            else:
+                return {}
 
     def pull_scrapers(self):
         ''' Returns a list of scrapers '''
         result = self.cursor.execute("SELECT * from Settings WHERE name = 'Scraper'").fetchall()
         return result
+
+    def inherit_db(self, temp_db_location):
+        """
+        Inherits data from external database into ours.
+        TODO Finish program data sucking from another db. am lazy.
+        """
+        if os.path.exists(temp_db_location):
+            external_conn = sqlite3.connect(str(temp_db_location), check_same_thread=False)
+            external_cursor = external_conn.cursor()
+        else:
+            print("Cannot find external database did you type the location correctly?")
+            self.universal.log_write.write("Cannot find external database did you type the location correctly? : "+\
+                temp_db_location)
+            return
+
+        print("Pulling Data from external database. May take a moment.")
+
+        #Creates a custom memorydb to reuse "high" quality code so i dont have to deal with custom sqlite
+        memorydb = {}
+        memorydb["Tags"] = external_cursor.execute("SELECT * from Tags").fetchall()
+        memorydb["File"] = external_cursor.execute("SELECT * from File").fetchall()
+        memorydb["Namespace"] = external_cursor.execute("SELECT * from Namespace").fetchall()
+        memorydb["Settings"] = external_cursor.execute("SELECT * from Settings").fetchall()
+        memorydb["RelationShip"] = external_cursor.execute("SELECT * from RelationShip").fetchall()
+
+        #This is a read only op. Closing to preserve memory
+        external_conn.close()
+
+        current_table = self.pull_data("File", "hash", None)
+        if universal.verbose:
+            print("File table", len(memorydb["File"]))
+            print("Currently Loaded", len(current_table))
+
+        minus_list= set(memorydb["File"]) - set(current_table.flatten())
+        print("Need to import", len(minus_list), "files.")
+
+        namespace_mapping = {}
+        for each in memorydb["Namespace"]:
+
+            #Created a new namespace if it doesn't exist inside current database
+            try:
+                print(each[0], each[1])
+                namespace_mapping[each[0]] = self.pull_data("Namespace", "name", each[1])[0][1]
+            except IndexError as E:
+                self.namespace_manager(each[1])
+
+                namespace_mapping[each[0]] = self.pull_data("Namespace", "name", each[1])[0][1]
+
+        cnt = 0
+
+        print("Namespace_manager;", namespace_mapping)
+        thread_num = self.universal.ThreadManager.THREAD_POOL_SIZE
+        thread_work = {}
+        print(thread_num)
+        for i in range(0, thread_num):
+            thread_work[i] = []
+        print(thread_work)
+        tcnt=0
+        for each in minus_list:
+            thread_work[tcnt].append(each)
+
+            if tcnt == thread_num - 1:
+                tcnt = 0
+            else:
+                tcnt += 1
+
+        print("Creating file and tag with namespace info")
+
+        for each in minus_list:
+            self.universal.log_write.write("Adding from external db " +str( temp_db_location) + "hash:" + str(each[1]))
+            self.file_manager( each[1], each[2], None, each[3])
+            for rel in self.pull_data("RelationShip", "fileid", each[0], memorydb):
+                self.tag_namespace_manager( self.pull_data("Tags", "id", rel[1], memorydb)[0][1], namespace_mapping[self.pull_data("Tags", "id", rel[1], memorydb)[0][3]])
+
+        print("Completed moving to IO / CPU bound relationship tasks")
+
+        for each in thread_work.keys():
+            self.universal.ThreadManager.multiprocessing_pool(self.import_threaded(thread_work[each], memorydb, namespace_mapping))
+
+            #print(self.pull_data("RelationShip", "fileid", each[0], memorydb))
+            #print("Importing database entry:", cnt, "hash", each[1])
+
+
+            #self.file_manager( each[1], each[2], None, each[3])
+
+            ##For each relationship add tag with namespace and then
+            #for rel in self.pull_data("RelationShip", "fileid", each[0], memorydb):
+            #    self.tag_namespace_manager( self.pull_data("Tags", "id", rel[1], memorydb)[0][1], namespace_mapping[self.pull_data("Tags", "id", rel[1], memorydb)[0][3]])
+            #    self.t_and_f_relation_manager(each[1], self.pull_data("Tags", "id", rel[1], memorydb)[0][1])
+
+    def import_threaded(self, file_work, memorydb, namespace_mapping):
+        for each in file_work:
+            #self.file_manager( each[1], each[2], None, each[3])
+            for rel in self.pull_data("RelationShip", "fileid", each[0], memorydb):
+                #self.tag_namespace_manager( self.pull_data("Tags", "id", rel[1], memorydb)[0][1], namespace_mapping[self.pull_data("Tags", "id", rel[1], memorydb)[0][3]])
+                self.t_and_f_relation_manager(each[1], self.pull_data("Tags", "id", rel[1], memorydb)[0][1])
